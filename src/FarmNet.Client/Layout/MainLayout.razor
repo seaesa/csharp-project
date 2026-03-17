@@ -1,0 +1,96 @@
+@inherits LayoutComponentBase
+@inject AuthApiService AuthService
+@inject NavigationManager Nav
+
+<AuthorizeView>
+    <Authorized>
+        <div class="farmnet-layout">
+            <nav class="farmnet-sidebar @(_collapsed ? "farmnet-sidebar--collapsed" : "")">
+                <div class="farmnet-brand">
+                    <i class="fas fa-leaf farmnet-brand__icon"></i>
+                    @if (!_collapsed)
+                    {
+                        <div>
+                            <div class="farmnet-brand__name">FarmNet</div>
+                            <div class="farmnet-brand__sub">Quản lý sản xuất nông nghiệp</div>
+                        </div>
+                    }
+                </div>
+
+                <div class="farmnet-nav">
+                    <div class="farmnet-nav__section-label">Menu</div>
+
+                    <NavLink class="farmnet-nav__link" href="/" Match="NavLinkMatch.All">
+                        <i class="fas fa-tachometer-alt farmnet-nav__icon"></i>
+                        @if (!_collapsed) { <span>Tổng quan</span> }
+                    </NavLink>
+
+                    <AuthorizeView Roles="Admin,FarmOwner,Worker" Context="bCtx">
+                        <Authorized>
+                            <NavLink class="farmnet-nav__link" href="/batches">
+                                <i class="fas fa-layer-group farmnet-nav__icon"></i>
+                                @if (!_collapsed) { <span>Lô sản phẩm</span> }
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <AuthorizeView Roles="Admin" Context="aCtx">
+                        <Authorized>
+                            <div class="farmnet-nav__section-label">Quản trị</div>
+                            <NavLink class="farmnet-nav__link" href="/farms">
+                                <i class="fas fa-tree farmnet-nav__icon"></i>
+                                @if (!_collapsed) { <span>Trang trại</span> }
+                            </NavLink>
+                            <NavLink class="farmnet-nav__link" href="/sensors">
+                                <i class="fas fa-microchip farmnet-nav__icon"></i>
+                                @if (!_collapsed) { <span>Cảm biến</span> }
+                            </NavLink>
+                            <NavLink class="farmnet-nav__link" href="/users">
+                                <i class="fas fa-users farmnet-nav__icon"></i>
+                                @if (!_collapsed) { <span>Người dùng</span> }
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+            </nav>
+
+            <div class="farmnet-main">
+                <header class="farmnet-header">
+                    <button class="farmnet-toggle" @onclick="ToggleSidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="farmnet-user">
+                        <div class="farmnet-user__avatar">
+                            @(context.User.FindFirst("hoTen")?.Value?.FirstOrDefault().ToString().ToUpper() ?? "?")
+                        </div>
+                        <div class="farmnet-user__info">
+                            <div class="farmnet-user__name">@context.User.FindFirst("hoTen")?.Value</div>
+                            <div class="farmnet-user__role">@context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</div>
+                        </div>
+                        <button class="farmnet-logout" @onclick="Logout" title="Đăng xuất">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </header>
+                <main class="farmnet-content">
+                    @Body
+                </main>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        @Body
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool _collapsed;
+
+    private void ToggleSidebar() => _collapsed = !_collapsed;
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Nav.NavigateTo("/login", true);
+    }
+}

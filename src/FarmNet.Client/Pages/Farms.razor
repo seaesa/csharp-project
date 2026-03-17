@@ -1,0 +1,175 @@
+@page "/farms"
+@attribute [Authorize(Roles = "Admin")]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Trang trại - FarmNet</PageTitle>
+
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">
+            <i class="fas fa-tree text-green-600 mr-2"></i>Quản lý trang trại
+        </Heading>
+        <Button Color="Color.Success" Clicked="() => ShowModal(null)">
+            <i class="fas fa-plus mr-1"></i> Thêm trang trại
+        </Button>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="flex justify-center py-12">
+            <div class="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        <CardDeck>
+            @foreach (var farm in _farms)
+            {
+                <Card>
+                    <CardBody>
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-tree text-green-600"></i>
+                            </div>
+                            <Buttons>
+                                <Button Color="Color.Primary" Size="Size.Small" Outline Clicked="() => ShowModal(farm)">
+                                    <i class="fas fa-edit"></i>
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Outline Clicked="() => DeleteFarm(farm.Id)">
+                                    <i class="fas fa-trash"></i>
+                                </Button>
+                            </Buttons>
+                        </div>
+                        <CardTitle Size="HeadingSize.Is6">@farm.Ten</CardTitle>
+                        <CardText TextColor="TextColor.Muted">
+                            <i class="fas fa-map-marker-alt text-red-400 mr-1"></i>@farm.DiaChi
+                        </CardText>
+                        @if (!string.IsNullOrEmpty(farm.MoTa))
+                        {
+                            <CardText>@farm.MoTa</CardText>
+                        }
+                        <Divider />
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-500">
+                                <i class="fas fa-boxes text-blue-400 mr-1"></i>@farm.SoLuongLo lô sản phẩm
+                            </span>
+                            <span class="text-gray-400">@farm.NgayTao.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </CardBody>
+                </Card>
+            }
+        </CardDeck>
+
+        @if (!_farms.Any())
+        {
+            <div class="text-center py-12 text-gray-400">
+                <i class="fas fa-tree text-5xl mb-3 opacity-30"></i>
+                <Paragraph>Chưa có trang trại nào. Hãy thêm trang trại đầu tiên!</Paragraph>
+            </div>
+        }
+    }
+</div>
+
+<Modal @bind-Visible="@_showModal" Centered>
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@(_editId.HasValue ? "Cập nhật trang trại" : "Thêm trang trại mới")</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@_form" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Tên trang trại</FieldLabel>
+                        <TextInput @bind-Value="_form.Ten" Placeholder="Ví dụ: Trang trại Xoài Cát">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextInput>
+                    </Field>
+                </Validation>
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Địa chỉ</FieldLabel>
+                        <TextInput @bind-Value="_form.DiaChi" Placeholder="Ví dụ: Huyện Cái Bè, Tiền Giang">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextInput>
+                    </Field>
+                </Validation>
+                <Field>
+                    <FieldLabel>Mô tả</FieldLabel>
+                    <MemoInput @bind-Value="_form.MoTa" Rows="3" Placeholder="Mô tả trang trại..." />
+                </Field>
+            </Validations>
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <Alert Color="Color.Danger" Visible Margin="Margin.Is3.FromTop">
+                    <AlertMessage>@_error</AlertMessage>
+                </Alert>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="() => _showModal = false">Hủy</Button>
+            <Button Color="Color.Success" Clicked="SaveFarm" Loading="@_saving">Lưu</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private List<FarmDto> _farms = [];
+    private bool _loading = true, _showModal, _saving;
+    private Guid? _editId;
+    private TaoFarmRequest _form = new();
+    private string? _error;
+    private Validations? _validations;
+
+    protected override async Task OnInitializedAsync() => await LoadFarms();
+
+    private async Task LoadFarms()
+    {
+        _loading = true;
+        _farms = await Api.GetAsync<List<FarmDto>>("api/farms") ?? [];
+        _loading = false;
+    }
+
+    private void ShowModal(FarmDto? farm)
+    {
+        _editId = farm?.Id;
+        _form = farm == null ? new() : new() { Ten = farm.Ten, DiaChi = farm.DiaChi, MoTa = farm.MoTa };
+        _error = null;
+        _validations?.ClearAll();
+        _showModal = true;
+    }
+
+    private async Task SaveFarm()
+    {
+        if (_validations is not null && !await _validations.ValidateAll()) return;
+
+        _saving = true;
+        _error = null;
+        var response = _editId.HasValue
+            ? await Api.PutAsync($"api/farms/{_editId}", _form)
+            : await Api.PostAsync("api/farms", _form);
+
+        if (response.IsSuccessStatusCode)
+        {
+            _showModal = false;
+            await LoadFarms();
+        }
+        else
+        {
+            var err = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            _error = err?.Message ?? "Lưu thất bại";
+        }
+        _saving = false;
+    }
+
+    private async Task DeleteFarm(Guid id)
+    {
+        var response = await Api.DeleteAsync($"api/farms/{id}");
+        if (response.IsSuccessStatusCode) await LoadFarms();
+    }
+}

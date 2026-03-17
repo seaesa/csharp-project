@@ -1,0 +1,220 @@
+@page "/sensors"
+@attribute [Authorize(Roles = "Admin")]
+@inject ApiClient Api
+
+<PageTitle>Cảm biến - FarmNet</PageTitle>
+
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">
+            <i class="fas fa-microchip text-blue-600 mr-2"></i>Quản lý cảm biến
+        </Heading>
+        <Button Color="Color.Primary" Clicked="() => ShowModal()">
+            <i class="fas fa-plus mr-1"></i> Thêm cảm biến
+        </Button>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="flex justify-center py-12">
+            <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        <div class="flex gap-2 mb-4">
+            <Button Color="@(_tab == 0 ? Color.Primary : Color.Light)" Size="Size.Small" Clicked="() => _tab = 0">
+                <i class="fas fa-microchip mr-1"></i> Thiết bị (@_sensors.Count)
+            </Button>
+            <Button Color="@(_tab == 1 ? Color.Primary : Color.Light)" Size="Size.Small" Clicked="() => _tab = 1">
+                <i class="fas fa-chart-line mr-1"></i> Dữ liệu cảm biến (@_sensorData.Count)
+            </Button>
+        </div>
+
+        @if (_tab == 0)
+        {
+            <Card>
+                <CardBody Padding="Padding.Is0">
+                    <Table Striped Hoverable Responsive>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Tên cảm biến</TableHeaderCell>
+                                <TableHeaderCell>Lô sản phẩm</TableHeaderCell>
+                                <TableHeaderCell>Trạng thái</TableHeaderCell>
+                                <TableHeaderCell>Ngày lắp đặt</TableHeaderCell>
+                                <TableHeaderCell TextAlignment="TextAlignment.End">Thao tác</TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var sensor in _sensors)
+                            {
+                                <TableRow>
+                                    <TableRowCell class="font-medium">@sensor.Ten</TableRowCell>
+                                    <TableRowCell class="font-mono text-green-700">@sensor.TenBatch</TableRowCell>
+                                    <TableRowCell>
+                                        <Badge Color="@(sensor.HoatDong ? Color.Success : Color.Secondary)" Pill>
+                                            @(sensor.HoatDong ? "Hoạt động" : "Không hoạt động")
+                                        </Badge>
+                                    </TableRowCell>
+                                    <TableRowCell TextColor="TextColor.Muted">@sensor.NgayLapDat.ToLocalTime().ToString("dd/MM/yyyy")</TableRowCell>
+                                    <TableRowCell TextAlignment="TextAlignment.End">
+                                        <Button Color="Color.Danger" Size="Size.Small" Clicked="() => DeleteSensor(sensor.Id)">
+                                            <i class="fas fa-trash"></i>
+                                        </Button>
+                                    </TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                    @if (!_sensors.Any())
+                    {
+                        <div class="text-center py-8 text-gray-400">Chưa có cảm biến nào</div>
+                    }
+                </CardBody>
+            </Card>
+        }
+        else
+        {
+            <Card>
+                <CardBody Padding="Padding.Is0">
+                    <Table Striped Hoverable Responsive>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Mã lô</TableHeaderCell>
+                                <TableHeaderCell>Nhiệt độ</TableHeaderCell>
+                                <TableHeaderCell>Độ ẩm KK</TableHeaderCell>
+                                <TableHeaderCell>pH đất</TableHeaderCell>
+                                <TableHeaderCell>Ánh sáng</TableHeaderCell>
+                                <TableHeaderCell>Độ ẩm đất</TableHeaderCell>
+                                <TableHeaderCell>Thời gian</TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var d in _sensorData)
+                            {
+                                <TableRow>
+                                    <TableRowCell class="font-mono text-green-700">@d.BatchId</TableRowCell>
+                                    <TableRowCell>@d.NhietDo.ToString("F1")°C</TableRowCell>
+                                    <TableRowCell>@d.DoAm.ToString("F1")%</TableRowCell>
+                                    <TableRowCell>@d.DoPH.ToString("F1")</TableRowCell>
+                                    <TableRowCell>@d.AnhSang.ToString("F0") lux</TableRowCell>
+                                    <TableRowCell>@d.DoAmDat.ToString("F1")%</TableRowCell>
+                                    <TableRowCell TextColor="TextColor.Muted">@d.ThoiGian.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                    @if (!_sensorData.Any())
+                    {
+                        <div class="text-center py-8 text-gray-400">Chưa có dữ liệu cảm biến</div>
+                    }
+                </CardBody>
+            </Card>
+        }
+    }
+</div>
+
+<Modal @bind-Visible="@_showModal" Centered>
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>Thêm cảm biến mới</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@_form" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Tên cảm biến</FieldLabel>
+                        <TextInput @bind-Value="_form.Ten" Placeholder="Ví dụ: Sensor_XOAI001_01">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextInput>
+                    </Field>
+                </Validation>
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Lô sản phẩm</FieldLabel>
+                        <Select TValue="Guid" @bind-Value="_form.BatchId">
+                            <ChildContent>
+                                <SelectItem TValue="Guid" Value="Guid.Empty">-- Chọn lô sản phẩm --</SelectItem>
+                                @foreach (var batch in _batches)
+                                {
+                                    <SelectItem TValue="Guid" Value="@batch.Id">@batch.MaLo - @batch.TenSanPham</SelectItem>
+                                }
+                            </ChildContent>
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </Select>
+                    </Field>
+                </Validation>
+                <Field>
+                    <FieldLabel>Mô tả</FieldLabel>
+                    <TextInput @bind-Value="_form.MoTa" Placeholder="Mô tả về cảm biến..." />
+                </Field>
+            </Validations>
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <Alert Color="Color.Danger" Visible Margin="Margin.Is3.FromTop">
+                    <AlertMessage>@_error</AlertMessage>
+                </Alert>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="() => _showModal = false">Hủy</Button>
+            <Button Color="Color.Primary" Clicked="SaveSensor" Loading="@_saving">Lưu</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private List<SensorDto> _sensors = [];
+    private List<BatchDto> _batches = [];
+    private List<SensorDataDto> _sensorData = [];
+    private TaoSensorRequest _form = new();
+    private bool _loading = true, _showModal, _saving;
+    private string? _error;
+    private Validations? _validations;
+    private int _tab;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        var s = Api.GetAsync<List<SensorDto>>("api/sensors");
+        var b = Api.GetAsync<List<BatchDto>>("api/batches");
+        var d = Api.GetAsync<List<SensorDataDto>>("api/sensors/data?count=50");
+        await Task.WhenAll(s, b, d);
+        _sensors = await s ?? [];
+        _batches = await b ?? [];
+        _sensorData = await d ?? [];
+        _loading = false;
+    }
+
+    private void ShowModal()
+    {
+        _form = new();
+        _error = null;
+        _validations?.ClearAll();
+        _showModal = true;
+    }
+
+    private async Task SaveSensor()
+    {
+        if (_validations is not null && !await _validations.ValidateAll()) return;
+
+        _saving = true;
+        var response = await Api.PostAsync("api/sensors", _form);
+        if (response.IsSuccessStatusCode) { _showModal = false; await LoadData(); }
+        else { var e = await response.Content.ReadFromJsonAsync<ErrorResponse>(); _error = e?.Message; }
+        _saving = false;
+    }
+
+    private async Task DeleteSensor(Guid id)
+    {
+        var response = await Api.DeleteAsync($"api/sensors/{id}");
+        if (response.IsSuccessStatusCode) await LoadData();
+    }
+}

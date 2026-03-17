@@ -1,0 +1,149 @@
+@page "/users"
+@attribute [Authorize(Roles = "Admin")]
+@inject ApiClient Api
+
+<PageTitle>Người dùng - FarmNet</PageTitle>
+
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">
+            <i class="fas fa-users text-green-700 mr-2"></i>Quản lý người dùng
+        </Heading>
+        <Button Color="Color.Primary" Clicked="() => ShowModal(null)">
+            <i class="fas fa-plus mr-1"></i> Thêm người dùng
+        </Button>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="flex justify-center py-12">
+            <div class="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        <Card>
+            <CardBody Padding="Padding.Is0">
+                <Table Striped Hoverable Responsive>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Họ tên</TableHeaderCell>
+                            <TableHeaderCell>Email</TableHeaderCell>
+                            <TableHeaderCell>Vai trò</TableHeaderCell>
+                            <TableHeaderCell>Trang trại</TableHeaderCell>
+                            <TableHeaderCell TextAlignment="TextAlignment.End">Thao tác</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var user in _users)
+                        {
+                            <TableRow>
+                                <TableRowCell>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-xs flex-shrink-0">
+                                            @user.HoTen.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <span class="font-medium">@user.HoTen</span>
+                                    </div>
+                                </TableRowCell>
+                                <TableRowCell TextColor="TextColor.Muted">@user.Email</TableRowCell>
+                                <TableRowCell><RoleBadge Role="@user.VaiTro" /></TableRowCell>
+                                <TableRowCell TextColor="TextColor.Muted">@(user.TenFarm ?? "—")</TableRowCell>
+                                <TableRowCell TextAlignment="TextAlignment.End">
+                                    <Buttons>
+                                        <Button Color="Color.Primary" Size="Size.Small" Clicked="() => ShowModal(user)">
+                                            <i class="fas fa-edit"></i>
+                                        </Button>
+                                        <Button Color="Color.Danger" Size="Size.Small" Clicked="() => DeleteUser(user.Id)">
+                                            <i class="fas fa-trash"></i>
+                                        </Button>
+                                    </Buttons>
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+                @if (!_users.Any())
+                {
+                    <div class="text-center py-8 text-gray-400">Chưa có người dùng nào</div>
+                }
+            </CardBody>
+        </Card>
+    }
+</div>
+
+<Modal @bind-Visible="@_showModal" Centered>
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@(_editId != null ? "Cập nhật người dùng" : "Thêm người dùng mới")</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            @if (_editId == null)
+            {
+                <UserCreateFields Form="_createForm" Farms="_farms" Error="_error" Saving="_saving"
+                    OnCancel="() => _showModal = false" OnSave="CreateUser" />
+            }
+            else
+            {
+                <UserUpdateFields Form="_updateForm" Farms="_farms" Error="_error" Saving="_saving"
+                    OnCancel="() => _showModal = false" OnSave="UpdateUser" />
+            }
+        </ModalBody>
+    </ModalContent>
+</Modal>
+
+@code {
+    private List<NguoiDungDto> _users = [];
+    private List<FarmDto> _farms = [];
+    private TaoNguoiDungRequest _createForm = new();
+    private CapNhatNguoiDungRequest _updateForm = new();
+    private string? _editId, _error;
+    private bool _loading = true, _showModal, _saving;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        var u = Api.GetAsync<List<NguoiDungDto>>("api/users");
+        var f = Api.GetAsync<List<FarmDto>>("api/farms");
+        await Task.WhenAll(u, f);
+        _users = await u ?? [];
+        _farms = await f ?? [];
+        _loading = false;
+    }
+
+    private void ShowModal(NguoiDungDto? user)
+    {
+        _editId = user?.Id;
+        _createForm = new();
+        _updateForm = user == null ? new() : new() { HoTen = user.HoTen, Email = user.Email, FarmId = user.FarmId };
+        _error = null;
+        _showModal = true;
+    }
+
+    private async Task CreateUser()
+    {
+        _saving = true;
+        var response = await Api.PostAsync("api/users", _createForm);
+        if (response.IsSuccessStatusCode) { _showModal = false; await LoadData(); }
+        else { var e = await response.Content.ReadFromJsonAsync<ErrorResponse>(); _error = e?.Message; }
+        _saving = false;
+    }
+
+    private async Task UpdateUser()
+    {
+        _saving = true;
+        var response = await Api.PutAsync($"api/users/{_editId}", _updateForm);
+        if (response.IsSuccessStatusCode) { _showModal = false; await LoadData(); }
+        else { var e = await response.Content.ReadFromJsonAsync<ErrorResponse>(); _error = e?.Message; }
+        _saving = false;
+    }
+
+    private async Task DeleteUser(string id)
+    {
+        var response = await Api.DeleteAsync($"api/users/{id}");
+        if (response.IsSuccessStatusCode) await LoadData();
+    }
+}

@@ -1,0 +1,112 @@
+@page "/batches/{Id:guid}/harvest"
+@attribute [Authorize(Roles = "Admin,FarmOwner")]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Thu hoạch - FarmNet</PageTitle>
+
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center gap-4">
+        <Button Color="Color.Light" Size="Size.Small" Clicked='@(() => Nav.NavigateTo($"/batches/{Id}"))'>
+            <i class="fas fa-arrow-left"></i>
+        </Button>
+        <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">
+            <i class="fas fa-seedling text-orange-500 mr-2"></i>Ghi nhận thu hoạch
+        </Heading>
+    </div>
+
+    @if (_existing != null)
+    {
+        <Alert Color="Color.Success" Visible>
+            <Heading Size="HeadingSize.Is5">
+                <i class="fas fa-check-circle mr-2"></i>Lô này đã được thu hoạch
+            </Heading>
+            <Divider />
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div><span class="text-gray-600">Ngày thu hoạch: </span><strong>@_existing.NgayThuHoach.ToString("dd/MM/yyyy")</strong></div>
+                <div><span class="text-gray-600">Trọng lượng: </span><strong>@_existing.TrongLuong kg</strong></div>
+                @if (!string.IsNullOrEmpty(_existing.GhiChuChatLuong))
+                {
+                    <div class="col-span-2"><span class="text-gray-600">Ghi chú: </span>@_existing.GhiChuChatLuong</div>
+                }
+            </div>
+        </Alert>
+    }
+    else
+    {
+        <Card>
+            <CardBody>
+                <Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@_form" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
+                    <Validation>
+                        <Field>
+                            <FieldLabel RequiredIndicator>Ngày thu hoạch</FieldLabel>
+                            <DateInput TValue="DateTime" @bind-Value="_form.NgayThuHoach">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </DateInput>
+                        </Field>
+                    </Validation>
+                    <Validation>
+                        <Field>
+                            <FieldLabel RequiredIndicator>Trọng lượng (kg)</FieldLabel>
+                            <NumericInput TValue="double" @bind-Value="_form.TrongLuong" Placeholder="Ví dụ: 500">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </NumericInput>
+                        </Field>
+                    </Validation>
+                    <Field>
+                        <FieldLabel>Ghi chú chất lượng</FieldLabel>
+                        <MemoInput @bind-Value="_form.GhiChuChatLuong" Rows="3" Placeholder="Ví dụ: Chất lượng tốt, màu đẹp, độ ngọt cao..." />
+                    </Field>
+                </Validations>
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <Alert Color="Color.Danger" Visible Margin="Margin.Is3.FromTop">
+                        <AlertMessage>@_error</AlertMessage>
+                    </Alert>
+                }
+                <div class="flex justify-end gap-3 mt-4">
+                    <Button Color="Color.Secondary" Clicked='@(() => Nav.NavigateTo($"/batches/{Id}"))'>Hủy</Button>
+                    <Button Color="Color.Warning" Clicked="SaveHarvest" Loading="@_saving">
+                        <i class="fas fa-seedling mr-1"></i> Xác nhận thu hoạch
+                    </Button>
+                </div>
+            </CardBody>
+        </Card>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private HarvestDto? _existing;
+    private TaoThuHoachRequest _form = new();
+    private bool _saving;
+    private string? _error;
+    private Validations? _validations;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _form.BatchId = Id;
+        try { _existing = await Api.GetAsync<HarvestDto>($"api/harvests/{Id}"); } catch { }
+    }
+
+    private async Task SaveHarvest()
+    {
+        if (_validations is not null && !await _validations.ValidateAll()) return;
+
+        _saving = true;
+        _error = null;
+        var response = await Api.PostAsync("api/harvests", _form);
+        if (response.IsSuccessStatusCode)
+            Nav.NavigateTo($"/batches/{Id}");
+        else
+        {
+            var err = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            _error = err?.Message ?? "Lưu thất bại";
+        }
+        _saving = false;
+    }
+}

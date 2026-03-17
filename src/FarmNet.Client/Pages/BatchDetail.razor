@@ -1,0 +1,250 @@
+@page "/batches/{Id:guid}"
+@attribute [Authorize]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Chi tiết lô - FarmNet</PageTitle>
+
+@if (_loading)
+{
+    <div class="flex justify-center py-12">
+        <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+}
+else if (_batch == null)
+{
+    <Alert Color="Color.Warning" Visible>
+        <AlertMessage>Không tìm thấy lô sản phẩm</AlertMessage>
+    </Alert>
+}
+else
+{
+    <div class="space-y-6">
+        <div class="flex items-center gap-4 flex-wrap">
+            <Button Color="Color.Light" Size="Size.Small" Clicked='@(() => Nav.NavigateTo("/batches"))'>
+                <i class="fas fa-arrow-left"></i>
+            </Button>
+            <div>
+                <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">@_batch.TenSanPham</Heading>
+                <Small TextColor="TextColor.Muted" class="font-mono">@_batch.MaLo · @_batch.TenFarm</Small>
+            </div>
+            <div class="ml-auto flex items-center gap-2 flex-wrap">
+                <BatchStatusBadge Status="@_batch.TrangThai" Label="@_batch.TenTrangThai" />
+                <AuthorizeView Roles="Admin,FarmOwner">
+                    <Authorized>
+                        @if (_batch.TrangThai == 1)
+                        {
+                            <Button Color="Color.Warning" Size="Size.Small" Clicked='@(() => Nav.NavigateTo($"/batches/{Id}/harvest"))'>
+                                <i class="fas fa-seedling mr-1"></i> Thu hoạch
+                            </Button>
+                        }
+                        @if (_harvest != null)
+                        {
+                            <Button Color="Color.Primary" Size="Size.Small" Clicked="ShowQr">
+                                <i class="fas fa-qrcode mr-1"></i> QR Code
+                            </Button>
+                        }
+                    </Authorized>
+                </AuthorizeView>
+                <Button Color="Color.Success" Size="Size.Small" Clicked='@(() => Nav.NavigateTo($"/batches/{Id}/logs"))'>
+                    <i class="fas fa-clipboard-list mr-1"></i> Nhật ký
+                </Button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        <i class="fas fa-microchip text-blue-500 mr-2"></i>Dữ liệu cảm biến gần nhất
+                    </CardTitle>
+                </CardHeader>
+                <CardBody>
+                    @if (_sensorData.Any())
+                    {
+                        var latest = _sensorData.First();
+                        <div class="grid grid-cols-2 gap-4">
+                            <SensorMetric Label="Nhiệt độ" Value="@($"{latest.NhietDo:F1}°C")" Icon="fa-thermometer-half" Color="text-red-500" />
+                            <SensorMetric Label="Độ ẩm không khí" Value="@($"{latest.DoAm:F1}%")" Icon="fa-tint" Color="text-blue-500" />
+                            <SensorMetric Label="Độ pH đất" Value="@($"{latest.DoPH:F1}")" Icon="fa-flask" Color="text-purple-500" />
+                            <SensorMetric Label="Ánh sáng" Value="@($"{latest.AnhSang:F0} lux")" Icon="fa-sun" Color="text-yellow-500" />
+                            <SensorMetric Label="Độ ẩm đất" Value="@($"{latest.DoAmDat:F1}%")" Icon="fa-water" Color="text-teal-500" />
+                            <div class="text-xs text-gray-400 flex items-end">
+                                <i class="fas fa-clock mr-1"></i>@latest.ThoiGian.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <Paragraph TextColor="TextColor.Muted" TextAlignment="TextAlignment.Center">Chưa có dữ liệu cảm biến</Paragraph>
+                    }
+                </CardBody>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        <i class="fas fa-leaf text-green-500 mr-2"></i>Thông tin thu hoạch
+                    </CardTitle>
+                </CardHeader>
+                <CardBody>
+                    @if (_harvest != null)
+                    {
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Ngày thu hoạch</span>
+                                <strong>@_harvest.NgayThuHoach.ToString("dd/MM/yyyy")</strong>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Trọng lượng</span>
+                                <strong>@_harvest.TrongLuong kg</strong>
+                            </div>
+                            @if (!string.IsNullOrEmpty(_harvest.GhiChuChatLuong))
+                            {
+                                <div class="text-sm">
+                                    <span class="text-gray-500">Ghi chú: </span><span>@_harvest.GhiChuChatLuong</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <Paragraph TextColor="TextColor.Muted" TextAlignment="TextAlignment.Center">Chưa có thông tin thu hoạch</Paragraph>
+                    }
+                </CardBody>
+            </Card>
+        </div>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    <i class="fas fa-clipboard-list text-green-500 mr-2"></i>Nhật ký canh tác (@_logs.Count bản ghi)
+                </CardTitle>
+            </CardHeader>
+            <CardBody>
+                @if (_logs.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var log in _logs.Take(5))
+                        {
+                            <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-leaf text-green-600 text-xs"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <Paragraph class="font-medium text-gray-800 text-sm" Margin="Margin.Is0">@log.HoatDong</Paragraph>
+                                    @if (!string.IsNullOrEmpty(log.GhiChu))
+                                    {
+                                        <Small TextColor="TextColor.Muted">@log.GhiChu</Small>
+                                    }
+                                    <Small TextColor="TextColor.Muted">@log.NgayThucHien.ToLocalTime().ToString("dd/MM/yyyy") · @log.TenNguoiThucHien</Small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @if (_logs.Count > 5)
+                    {
+                        <Button Color="Color.Link" Size="Size.Small" Clicked='@(() => Nav.NavigateTo($"/batches/{Id}/logs"))' Margin="Margin.Is3.FromTop">
+                            Xem tất cả @_logs.Count bản ghi →
+                        </Button>
+                    }
+                }
+                else
+                {
+                    <Paragraph TextColor="TextColor.Muted" TextAlignment="TextAlignment.Center">Chưa có nhật ký canh tác</Paragraph>
+                }
+            </CardBody>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    <i class="fas fa-link text-indigo-500 mr-2"></i>Bản ghi Blockchain
+                </CardTitle>
+            </CardHeader>
+            <CardBody>
+                @if (_blockchainRecords.Any())
+                {
+                    <div class="space-y-2">
+                        @foreach (var record in _blockchainRecords)
+                        {
+                            <div class="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg text-sm">
+                                <i class="fas @(record.DaXacNhan ? "fa-check-circle text-green-500" : "fa-clock text-yellow-500")"></i>
+                                <div class="flex-1 min-w-0">
+                                    <span class="font-medium text-gray-800">@record.TenSuKien</span>
+                                    @if (!string.IsNullOrEmpty(record.TxHash))
+                                    {
+                                        <Paragraph class="text-xs text-indigo-600 font-mono truncate" Margin="Margin.Is0">TX: @record.TxHash</Paragraph>
+                                    }
+                                </div>
+                                <Small TextColor="TextColor.Muted">@record.ThoiGian.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</Small>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <Paragraph TextColor="TextColor.Muted" TextAlignment="TextAlignment.Center">Chưa có bản ghi blockchain</Paragraph>
+                }
+            </CardBody>
+        </Card>
+    </div>
+}
+
+<Modal @bind-Visible="@_showQr" Centered>
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>QR Code truy xuất nguồn gốc</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody TextAlignment="TextAlignment.Center">
+            @if (_batch != null)
+            {
+                <Div Flex="Flex.Column.AlignItems.Center">
+                    <QRCode Value="@Nav.ToAbsoluteUri($"/trace/{_batch.MaLo}").ToString()" Alt="QR Code truy xuất nguồn gốc" EccLevel="EccLevel.Q" PixelsPerModule="8" />
+                </Div>
+                <Small TextColor="TextColor.Muted" class="font-mono mt-2 block break-all">@Nav.ToAbsoluteUri($"/trace/{_batch.MaLo}")</Small>
+                <Paragraph TextColor="TextColor.Muted" Margin="Margin.Is2.FromTop">Quét để xem thông tin lô <strong>@_batch.MaLo</strong></Paragraph>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="() => _showQr = false">Đóng</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private BatchDto? _batch;
+    private List<SensorDataDto> _sensorData = [];
+    private HarvestDto? _harvest;
+    private List<FarmingLogDto> _logs = [];
+    private List<BlockchainRecordDto> _blockchainRecords = [];
+    private bool _loading = true, _showQr;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _batch = await Api.GetAsync<BatchDto>($"api/batches/{Id}");
+            if (_batch != null)
+            {
+                var sensorTask = Api.GetAsync<List<SensorDataDto>>($"api/sensors/data/{_batch.MaLo}");
+                var harvestTask = Api.GetAsync<HarvestDto>($"api/harvests/{Id}");
+                var logsTask = Api.GetAsync<List<FarmingLogDto>>($"api/farming-logs/{Id}");
+                var blockchainTask = Api.GetAsync<List<BlockchainRecordDto>>($"api/batches/{Id}/blockchain");
+                await Task.WhenAll(sensorTask, harvestTask, logsTask, blockchainTask);
+                _sensorData = await sensorTask ?? [];
+                _harvest = await harvestTask;
+                _logs = await logsTask ?? [];
+                _blockchainRecords = await blockchainTask ?? [];
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ShowQr() => _showQr = true;
+}

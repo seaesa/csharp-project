@@ -1,0 +1,15 @@
+@code {
+    [Parameter] public int Status { get; set; }
+    [Parameter] public string Label { get; set; } = "";
+
+    private Color GetColor() => Status switch
+    {
+        1 => Color.Warning,
+        2 => Color.Info,
+        3 => Color.Primary,
+        4 => Color.Success,
+        _ => Color.Secondary
+    };
+}
+
+<Badge Color="@GetColor()" Pill>@Label</Badge>

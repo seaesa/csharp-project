@@ -1,0 +1,21 @@
+@code {
+    [Parameter] public string Role { get; set; } = "";
+
+    private Color GetColor() => Role switch
+    {
+        "Admin" => Color.Danger,
+        "FarmOwner" => Color.Success,
+        "Worker" => Color.Info,
+        _ => Color.Secondary
+    };
+
+    private string GetLabel() => Role switch
+    {
+        "Admin" => "Quản trị viên",
+        "FarmOwner" => "Chủ trang trại",
+        "Worker" => "Nhân viên",
+        _ => Role
+    };
+}
+
+<Badge Color="@GetColor()" Pill>@GetLabel()</Badge>

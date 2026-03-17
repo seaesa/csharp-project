@@ -1,0 +1,12 @@
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Color { get; set; } = "text-blue-500";
+}
+
+<div class="bg-gray-50 rounded-lg p-3 text-center">
+    <i class="fas @Icon @Color text-xl mb-1"></i>
+    <p class="text-lg font-bold text-gray-800">@Value</p>
+    <p class="text-xs text-gray-500">@Label</p>
+</div>

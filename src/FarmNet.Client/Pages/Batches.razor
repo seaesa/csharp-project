@@ -1,0 +1,202 @@
+@page "/batches"
+@attribute [Authorize]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Lô sản phẩm - FarmNet</PageTitle>
+
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">
+            <i class="fas fa-boxes text-blue-600 mr-2"></i>Lô sản phẩm
+        </Heading>
+        <AuthorizeView Roles="Admin,FarmOwner">
+            <Authorized>
+                <Button Color="Color.Primary" Clicked="() => ShowModal(null)">
+                    <i class="fas fa-plus mr-1"></i> Tạo lô mới
+                </Button>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+
+    <Buttons>
+        @foreach (var (label, val) in new[] { ("Tất cả", -1), ("Đang canh tác", 1), ("Đã thu hoạch", 2), ("Đã đóng gói", 3), ("Đã bán", 4) })
+        {
+            <Button Color="Color.Primary" Outline="@(_filterStatus != val)" Clicked="() => _filterStatus = val">@label</Button>
+        }
+    </Buttons>
+
+    @if (_loading)
+    {
+        <div class="flex justify-center py-12">
+            <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        var filtered = _filterStatus < 0 ? _batches : _batches.Where(b => b.TrangThai == _filterStatus).ToList();
+        <Card>
+            <CardBody Padding="Padding.Is0">
+                <Table Striped Hoverable Responsive>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Mã lô</TableHeaderCell>
+                            <TableHeaderCell>Sản phẩm</TableHeaderCell>
+                            <TableHeaderCell>Trang trại</TableHeaderCell>
+                            <TableHeaderCell>Trạng thái</TableHeaderCell>
+                            <TableHeaderCell>Ngày tạo</TableHeaderCell>
+                            <TableHeaderCell TextAlignment="TextAlignment.End">Thao tác</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var batch in filtered)
+                        {
+                            <TableRow>
+                                <TableRowCell class="font-mono font-bold text-green-700">@batch.MaLo</TableRowCell>
+                                <TableRowCell>@batch.TenSanPham</TableRowCell>
+                                <TableRowCell TextColor="TextColor.Muted">@batch.TenFarm</TableRowCell>
+                                <TableRowCell><BatchStatusBadge Status="@batch.TrangThai" Label="@batch.TenTrangThai" /></TableRowCell>
+                                <TableRowCell TextColor="TextColor.Muted">@batch.NgayTao.ToLocalTime().ToString("dd/MM/yyyy")</TableRowCell>
+                                <TableRowCell TextAlignment="TextAlignment.End">
+                                    <Buttons>
+                                        <Button Color="Color.Info" Size="Size.Small" Clicked='@(() => Nav.NavigateTo($"/batches/{batch.Id}"))'>
+                                            <i class="fas fa-eye"></i>
+                                        </Button>
+                                        <AuthorizeView Roles="Admin,FarmOwner">
+                                            <Authorized>
+                                                <Button Color="Color.Warning" Size="Size.Small" Clicked="() => ShowModal(batch)">
+                                                    <i class="fas fa-edit"></i>
+                                                </Button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                    </Buttons>
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+                @if (!filtered.Any())
+                {
+                    <div class="text-center py-8 text-gray-400">Không có lô sản phẩm nào</div>
+                }
+            </CardBody>
+        </Card>
+    }
+</div>
+
+<Modal @bind-Visible="@_showModal" Centered>
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@(_editId.HasValue ? "Cập nhật lô" : "Tạo lô sản phẩm mới")</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@_form" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Mã lô</FieldLabel>
+                        <TextInput @bind-Value="_form.MaLo" Disabled="@_editId.HasValue" Placeholder="Ví dụ: XOAI001">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextInput>
+                    </Field>
+                </Validation>
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Tên sản phẩm</FieldLabel>
+                        <TextInput @bind-Value="_form.TenSanPham" Placeholder="Ví dụ: Xoài cát Hòa Lộc">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextInput>
+                    </Field>
+                </Validation>
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Trang trại</FieldLabel>
+                        <Select TValue="Guid" @bind-Value="_form.FarmId">
+                            <ChildContent>
+                                <SelectItem TValue="Guid" Value="Guid.Empty">-- Chọn trang trại --</SelectItem>
+                                @foreach (var farm in _farms)
+                                {
+                                    <SelectItem TValue="Guid" Value="@farm.Id">@farm.Ten</SelectItem>
+                                }
+                            </ChildContent>
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </Select>
+                    </Field>
+                </Validation>
+                <Field>
+                    <FieldLabel>Mô tả</FieldLabel>
+                    <MemoInput @bind-Value="_form.MoTa" Rows="2" />
+                </Field>
+            </Validations>
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <Alert Color="Color.Danger" Visible Margin="Margin.Is3.FromTop">
+                    <AlertMessage>@_error</AlertMessage>
+                </Alert>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="() => _showModal = false">Hủy</Button>
+            <Button Color="Color.Primary" Clicked="SaveBatch" Loading="@_saving">Lưu</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private List<BatchDto> _batches = [];
+    private List<FarmDto> _farms = [];
+    private bool _loading = true, _showModal, _saving;
+    private int _filterStatus = -1;
+    private Guid? _editId;
+    private TaoBatchRequest _form = new();
+    private string? _error;
+    private Validations? _validations;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var batchTask = Api.GetAsync<List<BatchDto>>("api/batches");
+        var farmTask = Api.GetAsync<List<FarmDto>>("api/farms");
+        await Task.WhenAll(batchTask, farmTask);
+        _batches = await batchTask ?? [];
+        _farms = await farmTask ?? [];
+        _loading = false;
+    }
+
+    private void ShowModal(BatchDto? batch)
+    {
+        _editId = batch?.Id;
+        _form = batch == null ? new() : new() { MaLo = batch.MaLo, TenSanPham = batch.TenSanPham, MoTa = batch.MoTa, FarmId = batch.FarmId };
+        _error = null;
+        _validations?.ClearAll();
+        _showModal = true;
+    }
+
+    private async Task SaveBatch()
+    {
+        if (_validations is not null && !await _validations.ValidateAll()) return;
+
+        _saving = true;
+        _error = null;
+        var response = _editId.HasValue
+            ? await Api.PutAsync($"api/batches/{_editId}", _form)
+            : await Api.PostAsync("api/batches", _form);
+
+        if (response.IsSuccessStatusCode)
+        {
+            _showModal = false;
+            _batches = await Api.GetAsync<List<BatchDto>>("api/batches") ?? [];
+        }
+        else
+        {
+            var err = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            _error = err?.Message ?? "Lưu thất bại";
+        }
+        _saving = false;
+    }
+}

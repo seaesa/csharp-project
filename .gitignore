@@ -1,0 +1,53 @@
+# Build folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.rsuser
+
+# Visual Studio files
+.vs/
+
+# Rider / JetBrains
+.idea/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# ASP.NET temp
+*.tmp
+*.temp
+
+# Publish output
+publish/
+wwwroot/dist/
+
+# Node (nếu dùng npm)
+node_modules/
+
+# NuGet packages
+*.nupkg
+packages/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Resharper
+_ReSharper*
+*.DotSettings.user
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*

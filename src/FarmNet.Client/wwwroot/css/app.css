@@ -1,0 +1,270 @@
+html, body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+.valid.modified:not([type=checkbox]) { outline: 1px solid #26b050; }
+.invalid { outline: 1px solid red; }
+.validation-message { color: red; }
+
+/* ── Layout shell ── */
+.farmnet-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.farmnet-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: #166534;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.2s ease;
+    overflow: hidden;
+}
+
+.farmnet-sidebar--collapsed {
+    width: 64px;
+}
+
+/* Brand */
+.farmnet-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    min-height: 72px;
+}
+
+.farmnet-brand__icon {
+    color: #86efac;
+    font-size: 22px;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+}
+
+.farmnet-brand__name {
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.farmnet-brand__sub {
+    font-size: 10px;
+    color: #86efac;
+    white-space: nowrap;
+    margin-top: 2px;
+    line-height: 1.3;
+}
+
+/* Nav */
+.farmnet-nav {
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.farmnet-nav__section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    padding: 12px 8px 4px;
+}
+
+.farmnet-nav__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.farmnet-nav__link:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.farmnet-nav__link.active {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+}
+
+.farmnet-nav__icon {
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+    font-size: 15px;
+}
+
+/* ── Main area ── */
+.farmnet-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* Header */
+.farmnet-header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.farmnet-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #374151;
+    font-size: 16px;
+    transition: background 0.15s;
+}
+
+.farmnet-toggle:hover { background: #f3f4f6; }
+
+.farmnet-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.farmnet-user__avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #166534;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.farmnet-user__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+}
+
+.farmnet-user__role {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.farmnet-logout {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 15px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.farmnet-logout:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Content */
+.farmnet-content {
+    flex: 1;
+    overflow-y: auto;
+    background: #f9fafb;
+    padding: 24px;
+}
+
+/* ── Blazorise Table overrides ── */
+/* Normalize header — remove Flowbite blue tint */
+.table > thead > tr > th,
+table > thead > tr > th {
+    background-color: #f9fafb !important;
+    color: #374151 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 10px 14px !important;
+}
+
+/* Body rows */
+.table > tbody > tr > td,
+table > tbody > tr > td {
+    color: #374151 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    vertical-align: middle !important;
+}
+
+/* Striped rows — neutral gray, not blue */
+.table-striped > tbody > tr:nth-of-type(odd) > td,
+table.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: #f9fafb !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(even) > td,
+table.table-striped > tbody > tr:nth-of-type(even) > td {
+    background-color: #fff !important;
+}
+
+/* Hover row */
+.table-hover > tbody > tr:hover > td,
+table.table-hover > tbody > tr:hover > td {
+    background-color: #f0fdf4 !important;
+}
+
+/* Muted text inside table */
+.table td .text-muted,
+.table td [class*="text-muted"] {
+    color: #9ca3af !important;
+}
+
+/* ── Card overrides — remove shadow excessiveness ── */
+.card {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+
+/* ── Blazorise Badge — remove extra padding on Pill ── */
+.badge {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 3px 10px !important;
+}

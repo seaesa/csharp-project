@@ -1,0 +1,88 @@
+@page "/"
+@attribute [Authorize]
+@inject ApiClient Api
+
+<PageTitle>Tổng quan - FarmNet</PageTitle>
+
+<div class="space-y-6">
+    <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">Tổng quan</Heading>
+
+    @if (_loading)
+    {
+        <div class="flex items-center justify-center py-12">
+            <div class="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard Title="Trang trại" Value="@_farmCount.ToString()" Icon="fa-tree" Color="bg-green-500" />
+            <StatCard Title="Lô sản phẩm" Value="@_batchCount.ToString()" Icon="fa-boxes" Color="bg-blue-500" />
+            <StatCard Title="Lô đang canh tác" Value="@_activeBatchCount.ToString()" Icon="fa-seedling" Color="bg-yellow-500" />
+            <StatCard Title="Lô đã thu hoạch" Value="@_harvestedCount.ToString()" Icon="fa-check-circle" Color="bg-purple-500" />
+        </div>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    <i class="fas fa-boxes text-blue-500 mr-2"></i>Lô sản phẩm gần đây
+                </CardTitle>
+            </CardHeader>
+            <CardBody Padding="Padding.Is0">
+                @if (_recentBatches.Any())
+                {
+                    <Table Striped Hoverable Responsive>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Mã lô</TableHeaderCell>
+                                <TableHeaderCell>Sản phẩm</TableHeaderCell>
+                                <TableHeaderCell>Trang trại</TableHeaderCell>
+                                <TableHeaderCell>Trạng thái</TableHeaderCell>
+                                <TableHeaderCell>Ngày tạo</TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var batch in _recentBatches)
+                            {
+                                <TableRow>
+                                    <TableRowCell class="font-mono font-medium text-green-700">@batch.MaLo</TableRowCell>
+                                    <TableRowCell>@batch.TenSanPham</TableRowCell>
+                                    <TableRowCell TextColor="TextColor.Muted">@batch.TenFarm</TableRowCell>
+                                    <TableRowCell><BatchStatusBadge Status="@batch.TrangThai" Label="@batch.TenTrangThai" /></TableRowCell>
+                                    <TableRowCell TextColor="TextColor.Muted">@batch.NgayTao.ToLocalTime().ToString("dd/MM/yyyy")</TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                }
+                else
+                {
+                    <div class="text-center py-8">
+                        <Paragraph TextColor="TextColor.Muted">Chưa có lô sản phẩm nào</Paragraph>
+                    </div>
+                }
+            </CardBody>
+        </Card>
+    }
+</div>
+
+@code {
+    private bool _loading = true;
+    private int _farmCount, _batchCount, _activeBatchCount, _harvestedCount;
+    private List<BatchDto> _recentBatches = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var farms = await Api.GetAsync<List<FarmDto>>("api/farms");
+            var batches = await Api.GetAsync<List<BatchDto>>("api/batches");
+            _farmCount = farms?.Count ?? 0;
+            _batchCount = batches?.Count ?? 0;
+            _activeBatchCount = batches?.Count(b => b.TrangThai == 1) ?? 0;
+            _harvestedCount = batches?.Count(b => b.TrangThai >= 2) ?? 0;
+            _recentBatches = batches?.OrderByDescending(b => b.NgayTao).Take(5).ToList() ?? [];
+        }
+        finally { _loading = false; }
+    }
+}

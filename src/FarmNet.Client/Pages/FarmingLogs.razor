@@ -1,0 +1,159 @@
+@page "/batches/{Id:guid}/logs"
+@attribute [Authorize]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Nhật ký canh tác - FarmNet</PageTitle>
+
+<div class="space-y-6">
+    <div class="flex items-center gap-4">
+        <Button Color="Color.Light" Size="Size.Small" Clicked='@(() => Nav.NavigateTo($"/batches/{Id}"))'>
+            <i class="fas fa-arrow-left"></i>
+        </Button>
+        <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">
+            <i class="fas fa-clipboard-list text-green-500 mr-2"></i>Nhật ký canh tác
+        </Heading>
+        <AuthorizeView Roles="Admin,FarmOwner,Worker">
+            <Authorized>
+                <Button Color="Color.Success" Clicked="() => ShowModal()" class="ml-auto">
+                    <i class="fas fa-plus mr-1"></i> Thêm nhật ký
+                </Button>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="flex justify-center py-12">
+            <div class="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-3">
+            @foreach (var log in _logs)
+            {
+                <Card>
+                    <CardBody>
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-leaf text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between mb-1">
+                                    <Heading Size="HeadingSize.Is6" Margin="Margin.Is0">@log.HoatDong</Heading>
+                                    <Small TextColor="TextColor.Muted">@log.NgayThucHien.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</Small>
+                                </div>
+                                @if (!string.IsNullOrEmpty(log.GhiChu))
+                                {
+                                    <Paragraph TextColor="TextColor.Secondary" Margin="Margin.Is1.FromTop">@log.GhiChu</Paragraph>
+                                }
+                                <Small TextColor="TextColor.Muted">
+                                    <i class="fas fa-user mr-1"></i>@log.TenNguoiThucHien
+                                </Small>
+                            </div>
+                        </div>
+                    </CardBody>
+                </Card>
+            }
+            @if (!_logs.Any())
+            {
+                <div class="text-center py-12 text-gray-400">
+                    <i class="fas fa-clipboard text-4xl mb-3 opacity-30"></i>
+                    <Paragraph>Chưa có nhật ký nào. Hãy thêm nhật ký đầu tiên!</Paragraph>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<Modal @bind-Visible="@_showModal" Centered>
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>Thêm nhật ký canh tác</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@_form" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Hoạt động</FieldLabel>
+                        <TextInput @bind-Value="_form.HoatDong" Placeholder="Ví dụ: Bón phân NPK, Tưới nước, Phun thuốc...">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextInput>
+                    </Field>
+                </Validation>
+                <Validation>
+                    <Field>
+                        <FieldLabel RequiredIndicator>Ngày thực hiện</FieldLabel>
+                        <DateInput TValue="DateTime" @bind-Value="_form.NgayThucHien">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </DateInput>
+                    </Field>
+                </Validation>
+                <Field>
+                    <FieldLabel>Ghi chú</FieldLabel>
+                    <MemoInput @bind-Value="_form.GhiChu" Rows="3" Placeholder="Chi tiết về hoạt động..." />
+                </Field>
+            </Validations>
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <Alert Color="Color.Danger" Visible Margin="Margin.Is3.FromTop">
+                    <AlertMessage>@_error</AlertMessage>
+                </Alert>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="() => _showModal = false">Hủy</Button>
+            <Button Color="Color.Success" Clicked="SaveLog" Loading="@_saving">Lưu</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private List<FarmingLogDto> _logs = [];
+    private TaoNhatKyRequest _form = new();
+    private bool _loading = true, _showModal, _saving;
+    private string? _error;
+    private Validations? _validations;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _logs = await Api.GetAsync<List<FarmingLogDto>>($"api/farming-logs/{Id}") ?? [];
+        _loading = false;
+    }
+
+    private void ShowModal()
+    {
+        _form = new() { BatchId = Id };
+        _error = null;
+        _validations?.ClearAll();
+        _showModal = true;
+    }
+
+    private async Task SaveLog()
+    {
+        if (_validations is not null && !await _validations.ValidateAll()) return;
+
+        _saving = true;
+        _error = null;
+        _form.BatchId = Id;
+        var response = await Api.PostAsync("api/farming-logs", _form);
+        if (response.IsSuccessStatusCode)
+        {
+            _showModal = false;
+            _logs = await Api.GetAsync<List<FarmingLogDto>>($"api/farming-logs/{Id}") ?? [];
+        }
+        else
+        {
+            var err = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            _error = err?.Message ?? "Lưu thất bại";
+        }
+        _saving = false;
+    }
+}

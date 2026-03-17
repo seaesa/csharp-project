@@ -1,0 +1,20 @@
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Color { get; set; } = "bg-blue-500";
+}
+
+<Card>
+    <CardBody>
+        <div class="flex items-center gap-4">
+            <div class="@Color w-12 h-12 rounded-full flex items-center justify-center text-white text-xl flex-shrink-0">
+                <i class="fas @Icon"></i>
+            </div>
+            <div>
+                <Heading Size="HeadingSize.Is4" Margin="Margin.Is0">@Value</Heading>
+                <Paragraph TextColor="TextColor.Muted" Margin="Margin.Is0">@Title</Paragraph>
+            </div>
+        </div>
+    </CardBody>
+</Card>
