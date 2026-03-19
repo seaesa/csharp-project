@@ -14,11 +14,12 @@ builder.RootComponents.Add<FarmNet.Client.App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
+var productToken = builder.Configuration["Blazorise:ProductToken"];
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 
 builder.Services
-    .AddBlazorise(options => { options.Immediate = true; })
+    .AddBlazorise(options => { options.Immediate = true; options.ProductToken = productToken; })
     .AddTailwindProviders()
     .AddFontAwesomeIcons()
     .AddBlazoriseFluentValidation();

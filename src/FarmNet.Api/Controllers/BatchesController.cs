@@ -53,12 +53,10 @@ public class BatchesController(IBatchService batchService) : ControllerBase
     public async Task<IActionResult> GetBlockchainRecords(Guid id) =>
         Ok(await batchService.GetBlockchainRecordsAsync(id));
 
-    [HttpGet("{id:guid}/qr")]
-    [Authorize(Roles = "Admin,FarmOwner")]
-    public async Task<IActionResult> GetQrCode(Guid id)
+    [HttpGet("{id:guid}/verify")]
+    public async Task<IActionResult> VerifyBlockchain(Guid id)
     {
-        var base64 = await batchService.GenerateQrCodeAsync(id);
-        if (string.IsNullOrEmpty(base64)) return NotFound(new { message = "Không tìm thấy lô sản phẩm" });
-        return Ok(new { qrBase64 = base64 });
+        var result = await batchService.VerifyBlockchainAsync(id);
+        return result == null ? NotFound(new { message = "Không tìm thấy lô sản phẩm" }) : Ok(result);
     }
 }

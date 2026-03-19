@@ -20,7 +20,7 @@ public class SensorService(
     {
         var query = repo.Query().Include(s => s.Batch).AsQueryable();
         if (batchId.HasValue) query = query.Where(s => s.BatchId == batchId.Value);
-        return mapper.Map<IEnumerable<SensorDto>>(await query.ToListAsync());
+        return mapper.Map<IEnumerable<SensorDto>>(await query.OrderByDescending(s => s.NgayLapDat).ToListAsync());
     }
 
     public async Task<SensorDto?> GetByIdAsync(Guid id)

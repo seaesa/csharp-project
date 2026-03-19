@@ -13,7 +13,7 @@ public class FarmService(IRepository<Farm> repo, IUnitOfWork uow, IMapper mapper
 {
     public async Task<IEnumerable<FarmDto>> GetAllAsync()
     {
-        var farms = await repo.Query().Include(f => f.Batches).ToListAsync();
+        var farms = await repo.Query().Include(f => f.Batches).OrderByDescending(f => f.NgayTao).ToListAsync();
         return mapper.Map<IEnumerable<FarmDto>>(farms);
     }
 

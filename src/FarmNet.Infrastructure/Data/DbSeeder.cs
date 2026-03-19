@@ -22,10 +22,10 @@ public static class DbSeeder
             var admin = new AppUser
             {
                 HoTen = "Quản trị viên",
-                Email = "admin@farmnet.vn",
-                UserName = "admin@farmnet.vn"
+                Email = "admin@gmail.com",
+                UserName = "admin@gmail.com"
             };
-            await userManager.CreateAsync(admin, "Admin@123456");
+            await userManager.CreateAsync(admin, "admin@123");
             await userManager.AddToRoleAsync(admin, "Admin");
         }
     }

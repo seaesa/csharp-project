@@ -12,6 +12,6 @@ public interface IBatchService
     Task<Result<BatchDto>> CreateAsync(TaoBatchRequest request);
     Task<Result<BatchDto>> UpdateAsync(Guid id, TaoBatchRequest request);
     Task<Result> UpdateStatusAsync(Guid id, BatchStatus status);
-    Task<string> GenerateQrCodeAsync(Guid id);
     Task<IEnumerable<BlockchainRecordDto>> GetBlockchainRecordsAsync(Guid batchId);
+    Task<BlockchainVerifyResultDto?> VerifyBlockchainAsync(Guid batchId);
 }

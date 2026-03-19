@@ -1,0 +1,211 @@
+@host = http://localhost:5045
+
+### Auth
+
+### Đăng nhập (lấy JWT)
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@farmnet.vn",
+  "matKhau": "Admin@123456"
+}
+
+###
+@token = {{login.response.body.token}}
+
+### ----------------------
+### Batches (Lô sản phẩm)
+### ----------------------
+
+### Lấy danh sách lô (Admin / Chủ trang trại)
+GET {{host}}/api/batches
+Authorization: Bearer {{token}}
+
+###
+### Lấy danh sách lô theo trang trại
+GET {{host}}/api/batches?farmId={{farmId}}
+Authorization: Bearer {{token}}
+
+###
+### Tạo lô mới
+POST {{host}}/api/batches
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "maLo": "LO-001",
+  "tenSanPham": "Rau sạch hữu cơ",
+  "moTa": "Lô thử nghiệm",
+  "farmId": "{{farmId}}"
+}
+
+###
+### Lấy chi tiết lô
+GET {{host}}/api/batches/{{batchId}}
+Authorization: Bearer {{token}}
+
+###
+### Cập nhật lô
+PUT {{host}}/api/batches/{{batchId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "maLo": "LO-001",
+  "tenSanPham": "Rau sạch hữu cơ (update)",
+  "moTa": "Cập nhật mô tả",
+  "farmId": "{{farmId}}"
+}
+
+###
+### Cập nhật trạng thái lô
+PUT {{host}}/api/batches/{{batchId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "trangThai": 2
+}
+
+###
+### Lấy bản ghi blockchain của lô
+GET {{host}}/api/batches/{{batchId}}/blockchain
+Authorization: Bearer {{token}}
+
+### ---------
+### Farms
+### ---------
+
+### Lấy danh sách trang trại
+GET {{host}}/api/farms
+Authorization: Bearer {{token}}
+
+###
+### Tạo trang trại mới
+POST {{host}}/api/farms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ten": "Trang trại bò",
+  "diaChi": "Đà Lạt",
+  "moTa": "Mô tả thử nghiệm"
+}
+
+### -------------
+### Sensors & data
+### -------------
+
+### Lấy danh sách thiết bị cảm biến
+GET {{host}}/api/sensors
+Authorization: Bearer {{token}}
+
+###
+### Tạo thiết bị cảm biến mới
+POST {{host}}/api/sensors
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ten": "Cảm biến 1",
+  "maThietBi": "DEV-001",
+  "farmId": "{{farmId}}"
+}
+
+###
+### Đẩy dữ liệu cảm biến từ thiết bị (API cho IoT)
+POST {{host}}/api/sensors/data
+Content-Type: application/json
+
+{
+  "BatchId": "HEHE-001",
+  "Temperature": 25.3,
+  "Humidity": 60.5,
+  "SoilPH": 6.8,
+  "LightLevel": 800,
+  "SoilMoisture": 40.2
+}
+
+###
+### Lấy dữ liệu cảm biến của 1 lô
+GET {{host}}/api/sensors/data/LO-001
+Authorization: Bearer {{token}}
+
+###
+### Lấy dữ liệu cảm biến mới nhất (Admin)
+GET {{host}}/api/sensors/data?count=50
+Authorization: Bearer {{token}}
+
+### -------------
+### Harvests
+### -------------
+
+### Tạo thông tin thu hoạch cho lô
+POST {{host}}/api/harvests
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "batchId": "{{batchId}}",
+  "ngayThuHoach": "2025-01-01T00:00:00Z",
+  "trongLuong": 1000,
+  "ghiChuChatLuong": "Đạt tiêu chuẩn VietGAP"
+}
+
+###
+### Lấy thông tin thu hoạch theo lô
+GET {{host}}/api/harvests/{{batchId}}
+Authorization: Bearer {{token}}
+
+### -----------------
+### Farming Logs
+### -----------------
+
+### Thêm nhật ký canh tác
+POST {{host}}/api/farming-logs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "batchId": "{{batchId}}",
+  "hoatDong": "Tưới nước",
+  "ghiChu": "Tưới 15 phút",
+  "ngayThucHien": "2025-01-02T00:00:00Z"
+}
+
+###
+### Lấy nhật ký canh tác của lô
+GET {{host}}/api/farming-logs/{{batchId}}
+Authorization: Bearer {{token}}
+
+### -------------
+### Users
+### -------------
+
+### Lấy danh sách người dùng (Admin)
+GET {{host}}/api/users
+Authorization: Bearer {{token}}
+
+###
+### Tạo người dùng mới (Admin)
+POST {{host}}/api/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "hoTen": "Chủ trang trại",
+  "email": "owner@farmnet.vn",
+  "password": "Owner@123",
+  "vaiTro": "FarmOwner",
+  "farmId": "{{farmId}}"
+}
+
+### ----------------------
+### Public trace endpoint
+### ----------------------
+
+### Truy xuất nguồn gốc public theo mã lô (không cần JWT)
+GET {{host}}/api/public/trace/LO-001
+

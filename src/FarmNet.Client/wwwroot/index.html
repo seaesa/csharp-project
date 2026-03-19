@@ -86,6 +86,23 @@
     <!-- Flowbite JS (cần đặt trước blazor script) -->
     <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
 
+    <script>
+        window.copyToClipboard = function (text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text);
+            }
+            var el = document.createElement('textarea');
+            el.value = text;
+            el.style.position = 'fixed';
+            el.style.opacity = '0';
+            document.body.appendChild(el);
+            el.focus();
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            return Promise.resolve();
+        };
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
   </body>
 </html>

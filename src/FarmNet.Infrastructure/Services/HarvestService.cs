@@ -50,17 +50,19 @@ public class HarvestService(
         batchRepo.Update(batch);
         await uow.SaveChangesAsync();
 
-        var dataHash = TinhHash($"{harvest.BatchId}|{harvest.NgayThuHoach:O}|{harvest.TrongLuong}");
-        var txHash = await blockchain.RecordHashAsync(dataHash, BlockchainEventType.ThuHoach, batch.MaLo);
+        var ngayUtc  = DateTime.SpecifyKind(harvest.NgayThuHoach, DateTimeKind.Utc);
+        var dataHash = TinhHash($"{harvest.BatchId}|{ngayUtc:O}|{harvest.TrongLuong}");
+        var txHash   = await blockchain.RecordHashAsync(dataHash, BlockchainEventType.ThuHoach, batch.MaLo);
 
         var record = new BlockchainRecord
         {
-            Id = Guid.NewGuid(),
-            BatchId = request.BatchId,
+            Id         = Guid.NewGuid(),
+            BatchId    = request.BatchId,
+            EntityId   = harvest.Id,                        // 1-to-1 mapping for verify
             LoaiSuKien = BlockchainEventType.ThuHoach,
-            DataHash = dataHash,
-            TxHash = string.IsNullOrEmpty(txHash) ? null : txHash,
-            DaXacNhan = !string.IsNullOrEmpty(txHash)
+            DataHash   = dataHash,
+            TxHash     = string.IsNullOrEmpty(txHash) ? null : txHash,
+            DaXacNhan  = !string.IsNullOrEmpty(txHash)
         };
         await blockchainRepo.AddAsync(record);
         await uow.SaveChangesAsync();

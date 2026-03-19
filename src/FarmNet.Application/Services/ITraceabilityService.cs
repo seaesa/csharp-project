@@ -5,5 +5,5 @@ namespace FarmNet.Application.Services;
 public interface ITraceabilityService
 {
     Task<TraceabilityDto?> GetTraceAsync(string batchMaLo);
-    Task<bool> VerifyBatchAsync(Guid batchId);
+    Task<BlockchainVerifyResultDto?> VerifyAsync(string batchMaLo);
 }

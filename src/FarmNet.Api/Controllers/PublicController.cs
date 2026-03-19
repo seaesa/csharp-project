@@ -14,10 +14,10 @@ public class PublicController(ITraceabilityService traceabilityService) : Contro
         return result == null ? NotFound(new { message = "Không tìm thấy thông tin lô sản phẩm" }) : Ok(result);
     }
 
-    [HttpGet("verify/{batchId:guid}")]
-    public async Task<IActionResult> Verify(Guid batchId)
+    [HttpGet("trace/{batchMaLo}/verify")]
+    public async Task<IActionResult> Verify(string batchMaLo)
     {
-        var valid = await traceabilityService.VerifyBatchAsync(batchId);
-        return Ok(new { hopLe = valid, thongBao = valid ? "Dữ liệu blockchain hợp lệ" : "Không thể xác minh blockchain" });
+        var result = await traceabilityService.VerifyAsync(batchMaLo);
+        return result == null ? NotFound(new { message = "Không tìm thấy thông tin lô sản phẩm" }) : Ok(result);
     }
 }

@@ -81,15 +81,27 @@
         <ModalBody>
             @if (_editId == null)
             {
-                <UserCreateFields Form="_createForm" Farms="_farms" Error="_error" Saving="_saving"
-                    OnCancel="() => _showModal = false" OnSave="CreateUser" />
+                <Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@_createForm" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
+                    <UserCreateFields Form="_createForm" Farms="_farms" />
+                </Validations>
             }
             else
             {
-                <UserUpdateFields Form="_updateForm" Farms="_farms" Error="_error" Saving="_saving"
-                    OnCancel="() => _showModal = false" OnSave="UpdateUser" />
+                <Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@_updateForm" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
+                    <UserUpdateFields Form="_updateForm" Farms="_farms" />
+                </Validations>
+            }
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <Alert Color="Color.Danger" Visible Margin="Margin.Is3.FromTop">
+                    <AlertMessage>@_error</AlertMessage>
+                </Alert>
             }
         </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="() => _showModal = false">Hủy</Button>
+            <Button Color="Color.Success" Clicked="SaveUser" Loading="@_saving">Lưu</Button>
+        </ModalFooter>
     </ModalContent>
 </Modal>
 
@@ -100,6 +112,7 @@
     private CapNhatNguoiDungRequest _updateForm = new();
     private string? _editId, _error;
     private bool _loading = true, _showModal, _saving;
+    private Validations? _validations;
 
     protected override async Task OnInitializedAsync() => await LoadData();
 
@@ -120,24 +133,22 @@
         _createForm = new();
         _updateForm = user == null ? new() : new() { HoTen = user.HoTen, Email = user.Email, FarmId = user.FarmId };
         _error = null;
+        _validations?.ClearAll();
         _showModal = true;
     }
 
-    private async Task CreateUser()
+    private async Task SaveUser()
     {
-        _saving = true;
-        var response = await Api.PostAsync("api/users", _createForm);
-        if (response.IsSuccessStatusCode) { _showModal = false; await LoadData(); }
-        else { var e = await response.Content.ReadFromJsonAsync<ErrorResponse>(); _error = e?.Message; }
-        _saving = false;
-    }
+        if (_validations is not null && !await _validations.ValidateAll()) return;
 
-    private async Task UpdateUser()
-    {
         _saving = true;
-        var response = await Api.PutAsync($"api/users/{_editId}", _updateForm);
+        _error = null;
+        var response = _editId == null
+            ? await Api.PostAsync("api/users", _createForm)
+            : await Api.PutAsync($"api/users/{_editId}", _updateForm);
+
         if (response.IsSuccessStatusCode) { _showModal = false; await LoadData(); }
-        else { var e = await response.Content.ReadFromJsonAsync<ErrorResponse>(); _error = e?.Message; }
+        else { var e = await response.Content.ReadFromJsonAsync<ErrorResponse>(); _error = e?.Message ?? "Lưu thất bại"; }
         _saving = false;
     }
 

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\FarmNet.Domain\FarmNet.Domain.csproj" />
@@ -15,7 +15,6 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Nethereum.Web3" Version="6.0.0" />
-    <PackageReference Include="QRCoder" Version="1.7.0" />
   </ItemGroup>
 
   <PropertyGroup>

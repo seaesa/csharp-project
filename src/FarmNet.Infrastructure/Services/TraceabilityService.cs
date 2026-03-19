@@ -10,9 +10,8 @@ namespace FarmNet.Infrastructure.Services;
 public class TraceabilityService(
     IRepository<Batch> batchRepo,
     IRepository<SensorData> sensorDataRepo,
-    IRepository<BlockchainRecord> blockchainRepo,
-    IBlockchainService blockchain,
-    IMapper mapper) : ITraceabilityService
+    IMapper mapper,
+    IBatchService batchService) : ITraceabilityService
 {
     public async Task<TraceabilityDto?> GetTraceAsync(string batchMaLo)
     {
@@ -41,20 +40,11 @@ public class TraceabilityService(
         );
     }
 
-    public async Task<bool> VerifyBatchAsync(Guid batchId)
+    public async Task<BlockchainVerifyResultDto?> VerifyAsync(string batchMaLo)
     {
-        var records = await blockchainRepo.Query()
-            .Where(r => r.BatchId == batchId && r.TxHash != null)
-            .ToListAsync();
-
-        if (!records.Any()) return false;
-
-        foreach (var record in records)
-        {
-            if (!await blockchain.VerifyHashAsync(record.TxHash!, record.DataHash))
-                return false;
-        }
-        return true;
+        var batch = await batchRepo.Query().FirstOrDefaultAsync(b => b.MaLo == batchMaLo);
+        if (batch == null) return null;
+        return await batchService.VerifyBlockchainAsync(batch.Id);
     }
 
     private async Task<IEnumerable<SensorData>> GetSensorDataAsync(string batchMaLo)

@@ -1,74 +1,40 @@
+<Validation>
+    <Field>
+        <FieldLabel RequiredIndicator>Họ tên</FieldLabel>
+        <TextInput @bind-Value="Form.HoTen" Placeholder="Họ và tên đầy đủ">
+            <Feedback><ValidationError /></Feedback>
+        </TextInput>
+    </Field>
+</Validation>
+<Validation>
+    <Field>
+        <FieldLabel RequiredIndicator>Email</FieldLabel>
+        <TextInput @bind-Value="Form.Email" Placeholder="example@email.com">
+            <Feedback><ValidationError /></Feedback>
+        </TextInput>
+    </Field>
+</Validation>
+<Field>
+    <FieldLabel>Trang trại</FieldLabel>
+    <Select TValue="Guid?" @bind-Value="Form.FarmId">
+        <SelectItem TValue="Guid?" Value="@((Guid?)null)">-- Không thuộc trang trại --</SelectItem>
+        @foreach (var farm in Farms)
+        {
+            <SelectItem TValue="Guid?" Value="@((Guid?)farm.Id)">@farm.Ten</SelectItem>
+        }
+    </Select>
+</Field>
+<Validation>
+    <Field>
+        <FieldLabel>Mật khẩu mới</FieldLabel>
+        <FieldHelp>Để trống nếu không thay đổi</FieldHelp>
+        <TextInput @bind-Value="Form.MatKhauMoi" Role="TextRole.Password" Placeholder="Mật khẩu mới">
+            <Feedback><ValidationError /></Feedback>
+        </TextInput>
+    </Field>
+</Validation>
+
 @code {
     [Parameter] public CapNhatNguoiDungRequest Form { get; set; } = new();
     [Parameter] public List<FarmDto> Farms { get; set; } = [];
-    [Parameter] public string? Error { get; set; }
-    [Parameter] public bool Saving { get; set; }
-    [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public EventCallback OnSave { get; set; }
-}
-
-<Validations @ref="_validations" Mode="ValidationMode.Manual" Model="@Form" HandlerType="typeof(FluentValidationHandler)" ValidateOnLoad="false">
-    <Validation>
-        <Field>
-            <FieldLabel RequiredIndicator>Họ tên</FieldLabel>
-            <TextInput @bind-Value="Form.HoTen" Placeholder="Họ và tên đầy đủ">
-                <Feedback>
-                    <ValidationError />
-                </Feedback>
-            </TextInput>
-        </Field>
-    </Validation>
-    <Validation>
-        <Field>
-            <FieldLabel RequiredIndicator>Email</FieldLabel>
-            <TextInput @bind-Value="Form.Email" Placeholder="example@email.com">
-                <Feedback>
-                    <ValidationError />
-                </Feedback>
-            </TextInput>
-        </Field>
-    </Validation>
-    <Field>
-        <FieldLabel>Trang trại</FieldLabel>
-        <Select TValue="Guid?" @bind-Value="Form.FarmId">
-            <SelectItem TValue="Guid?" Value="@((Guid?)null)">-- Không thuộc trang trại --</SelectItem>
-            @foreach (var farm in Farms)
-            {
-                <SelectItem TValue="Guid?" Value="@((Guid?)farm.Id)">@farm.Ten</SelectItem>
-            }
-        </Select>
-    </Field>
-    <Validation>
-        <Field>
-            <FieldLabel>Mật khẩu mới</FieldLabel>
-            <FieldHelp>Để trống nếu không thay đổi</FieldHelp>
-            <TextInput @bind-Value="Form.MatKhauMoi" Role="TextRole.Password" Placeholder="Mật khẩu mới">
-                <Feedback>
-                    <ValidationError />
-                </Feedback>
-            </TextInput>
-        </Field>
-    </Validation>
-</Validations>
-
-@if (!string.IsNullOrEmpty(Error))
-{
-    <Alert Color="Color.Danger" Visible Margin="Margin.Is3.FromTop">
-        <AlertMessage>@Error</AlertMessage>
-    </Alert>
-}
-
-<div class="flex justify-end gap-3 mt-4">
-    <Button Color="Color.Secondary" Clicked="OnCancel">Hủy</Button>
-    <Button Color="Color.Primary" Clicked="HandleSave" Loading="@Saving">Lưu</Button>
-</div>
-
-@code {
-    private Validations? _validations;
-
-    private async Task HandleSave()
-    {
-        if (_validations is not null && !await _validations.ValidateAll()) return;
-        await OnSave.InvokeAsync();
-    }
 }

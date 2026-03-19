@@ -44,17 +44,19 @@ public class FarmingLogService(
         await repo.AddAsync(log);
         await uow.SaveChangesAsync();
 
-        var dataHash = TinhHash($"{log.BatchId}|{log.HoatDong}|{log.NgayThucHien:O}|{userId}");
-        var txHash = await blockchain.RecordHashAsync(dataHash, BlockchainEventType.NhatKyCanhTac, request.BatchId.ToString());
+        var ngayUtc  = DateTime.SpecifyKind(log.NgayThucHien, DateTimeKind.Utc);
+        var dataHash = TinhHash($"{log.BatchId}|{log.HoatDong}|{ngayUtc:O}|{userId}");
+        var txHash   = await blockchain.RecordHashAsync(dataHash, BlockchainEventType.NhatKyCanhTac, request.BatchId.ToString());
 
         var record = new BlockchainRecord
         {
-            Id = Guid.NewGuid(),
-            BatchId = request.BatchId,
+            Id         = Guid.NewGuid(),
+            BatchId    = request.BatchId,
+            EntityId   = log.Id,                            // 1-to-1 mapping for verify
             LoaiSuKien = BlockchainEventType.NhatKyCanhTac,
-            DataHash = dataHash,
-            TxHash = string.IsNullOrEmpty(txHash) ? null : txHash,
-            DaXacNhan = !string.IsNullOrEmpty(txHash)
+            DataHash   = dataHash,
+            TxHash     = string.IsNullOrEmpty(txHash) ? null : txHash,
+            DaXacNhan  = !string.IsNullOrEmpty(txHash)
         };
         await blockchainRepo.AddAsync(record);
         await uow.SaveChangesAsync();
