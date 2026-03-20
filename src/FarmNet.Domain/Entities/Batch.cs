@@ -19,4 +19,5 @@ public class Batch
     public ICollection<FarmingLog> NhatKy { get; set; } = [];
     public Harvest? ThuHoach { get; set; }
     public ICollection<BlockchainRecord> BlockchainRecords { get; set; } = [];
+    public ICollection<DailyHash> DailyHashes { get; set; } = [];
 }

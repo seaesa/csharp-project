@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<FarmingLog> FarmingLogs => Set<FarmingLog>();
     public DbSet<Harvest> Harvests => Set<Harvest>();
     public DbSet<BlockchainRecord> BlockchainRecords => Set<BlockchainRecord>();
+    public DbSet<DailyHash> DailyHashes => Set<DailyHash>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -63,6 +64,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             e.HasKey(x => x.Id);
             e.HasOne(x => x.Batch).WithMany(x => x.BlockchainRecords).HasForeignKey(x => x.BatchId);
+        });
+
+        builder.Entity<DailyHash>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.BatchId, x.Ngay }).IsUnique();
+            e.HasOne(x => x.Batch).WithMany(x => x.DailyHashes).HasForeignKey(x => x.BatchId);
         });
 
         builder.Entity<AppUser>(e =>

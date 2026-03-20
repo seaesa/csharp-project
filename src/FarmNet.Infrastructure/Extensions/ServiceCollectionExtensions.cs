@@ -33,6 +33,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IBlockchainService, BlockchainService>();
+        services.AddScoped<IDailyHashService, DailyHashService>();
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();

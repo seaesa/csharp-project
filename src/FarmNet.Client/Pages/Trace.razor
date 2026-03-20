@@ -6,7 +6,6 @@
 <PageTitle>Truy xuất nguồn gốc - @MaLo</PageTitle>
 
 <div class="min-h-screen bg-gradient-to-b from-green-50 to-white">
-    <!-- Header -->
     <div class="bg-green-700 text-white py-6 px-4">
         <div class="max-w-2xl mx-auto flex items-center gap-3">
             <i class="fas fa-leaf text-green-300 text-2xl"></i>
@@ -35,7 +34,6 @@
         }
         else
         {
-            <!-- Product Identity Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden">
                 <div class="bg-gradient-to-r from-green-600 to-green-500 px-6 py-4">
                     <div class="flex items-center gap-4">
@@ -81,13 +79,11 @@
                 </div>
             </div>
 
-            <!-- Timeline -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h3 class="font-bold text-gray-700 mb-6 flex items-center gap-2">
                     <i class="fas fa-route text-green-500"></i>Hành trình sản xuất (@_timeline.Count sự kiện)
                 </h3>
                 <div class="relative">
-                    <!-- Vertical line -->
                     <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-100"></div>
                     <div class="space-y-0">
                         @for (int i = 0; i < _timeline.Count; i++)
@@ -95,11 +91,9 @@
                             var item = _timeline[i];
                             var isLast = i == _timeline.Count - 1;
                             <div class="relative flex items-start gap-4 @(isLast ? "" : "pb-6")">
-                                <!-- Dot -->
                                 <div class="relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 @item.DotClass">
                                     <i class="fas @item.Icon text-white text-xs"></i>
                                 </div>
-                                <!-- Content -->
                                 <div class="flex-1 min-w-0 pt-0.5">
                                     <div class="flex items-start justify-between gap-2">
                                         <p class="font-semibold text-gray-800 text-sm">@item.Title</p>
@@ -133,16 +127,8 @@
                 }
                 else if (_verify != null)
                 {
-                    @if (_verify.TongSoBanGhi == 0)
+                    @if (_verify.ToanVen)
                     {
-                        <div class="p-6 text-center">
-                            <i class="fas fa-info-circle text-gray-300 text-3xl mb-2"></i>
-                            <p class="text-gray-500 text-sm">Lô sản phẩm chưa có dữ liệu xác thực</p>
-                        </div>
-                    }
-                    else if (_verify.ToanVen)
-                    {
-                        <!-- Toàn vẹn -->
                         <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-5 text-white">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -151,7 +137,14 @@
                                 <div>
                                     <h3 class="font-bold text-lg">Sản phẩm xác thực</h3>
                                     <p class="text-green-100 text-sm">
-                                        Tất cả @_verify.TongSoBanGhi bước sản xuất đã được kiểm tra — dữ liệu không bị thay đổi.
+                                        @if (_verify.TongSoNgay > 0)
+                                        {
+                                            <span>Kiểm tra ngẫu nhiên @_verify.SoNgayKiemTra/@_verify.TongSoNgay ngày — dữ liệu không bị thay đổi.</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Thông tin lô sản phẩm đã được ghi nhận trên blockchain.</span>
+                                        }
                                     </p>
                                 </div>
                             </div>
@@ -159,7 +152,6 @@
                     }
                     else
                     {
-                        <!-- Phát hiện thay đổi -->
                         <div class="bg-gradient-to-r from-red-500 to-rose-500 px-6 py-5 text-white">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -168,22 +160,37 @@
                                 <div>
                                     <h3 class="font-bold text-lg">Phát hiện dữ liệu bị thay đổi</h3>
                                     <p class="text-red-100 text-sm">
-                                        @_verify.SoBanGhiBiThayDoi/@_verify.TongSoBanGhi bước sản xuất có dữ liệu không khớp với bản gốc.
+                                        @_verify.SoNgayBiThayDoi/@_verify.SoNgayKiemTra ngày kiểm tra có dữ liệu không khớp.
                                     </p>
                                 </div>
                             </div>
                         </div>
                     }
 
-                    @if (_verify.TongSoBanGhi > 0)
-                    {
-                        <div class="p-4">
-                            <!-- Expandable detail -->
+                    <div class="p-4">
+                        <div class="space-y-2 mb-3">
+                            <div class="flex items-center gap-3 p-3 rounded-xl text-sm @StatusBg(_verify.TaoLoStatus)">
+                                <i class="fas @StatusIcon(_verify.TaoLoStatus) flex-shrink-0"></i>
+                                <span class="flex-1 font-medium text-gray-800">Tạo lô sản phẩm</span>
+                                <span class="text-xs font-medium @StatusColor(_verify.TaoLoStatus)">@StatusLabel(_verify.TaoLoStatus)</span>
+                            </div>
+                            @if (_verify.ThuHoachStatus.HasValue)
+                            {
+                                <div class="flex items-center gap-3 p-3 rounded-xl text-sm @StatusBg(_verify.ThuHoachStatus.Value)">
+                                    <i class="fas @StatusIcon(_verify.ThuHoachStatus.Value) flex-shrink-0"></i>
+                                    <span class="flex-1 font-medium text-gray-800">Thu hoạch</span>
+                                    <span class="text-xs font-medium @StatusColor(_verify.ThuHoachStatus.Value)">@StatusLabel(_verify.ThuHoachStatus.Value)</span>
+                                </div>
+                            }
+                        </div>
+
+                        @if (_verify.ChiTietNgay.Count > 0)
+                        {
                             <button class="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-800 transition-colors py-2"
                                     @onclick="() => _showDetail = !_showDetail">
                                 <span class="flex items-center gap-2">
-                                    <i class="fas fa-list-check text-indigo-400"></i>
-                                    Chi tiết xác thực từng bước
+                                    <i class="fas fa-calendar-check text-indigo-400"></i>
+                                    Chi tiết kiểm tra theo ngày (@_verify.SoNgayKiemTra/@_verify.TongSoNgay ngày)
                                 </span>
                                 <i class="fas @(_showDetail ? "fa-chevron-up" : "fa-chevron-down") text-xs"></i>
                             </button>
@@ -191,44 +198,21 @@
                             @if (_showDetail)
                             {
                                 <div class="space-y-2 mt-2">
-                                    @foreach (var item in _verify.ChiTiet)
+                                    @foreach (var item in _verify.ChiTietNgay)
                                     {
-                                        var rowBg = item.TrangThaiXacThuc switch {
-                                            VerifyStatus.HopLe                 => "bg-green-50",
-                                            VerifyStatus.ChuaXacNhanBlockchain => "bg-yellow-50",
-                                            _                                  => "bg-red-50"
-                                        };
-                                        <div class="flex items-center gap-3 p-3 rounded-xl text-sm @rowBg">
-                                            @switch (item.TrangThaiXacThuc)
-                                            {
-                                                case VerifyStatus.HopLe:
-                                                    <i class="fas fa-check-circle text-green-500 flex-shrink-0"></i>
-                                                    break;
-                                                case VerifyStatus.ChuaXacNhanBlockchain:
-                                                    <i class="fas fa-clock text-yellow-500 flex-shrink-0"></i>
-                                                    break;
-                                                case VerifyStatus.KhongTruyCapBlockchain:
-                                                    <i class="fas fa-plug-circle-exclamation text-orange-400 flex-shrink-0"></i>
-                                                    break;
-                                                case VerifyStatus.KhongHoTroLoaiSuKien:
-                                                    <i class="fas fa-minus-circle text-gray-400 flex-shrink-0"></i>
-                                                    break;
-                                                default:
-                                                    <i class="fas fa-times-circle text-red-500 flex-shrink-0"></i>
-                                                    break;
-                                            }
+                                        <div class="flex items-center gap-3 p-3 rounded-xl text-sm @StatusBg(item.TrangThai)">
+                                            <i class="fas @StatusIcon(item.TrangThai) flex-shrink-0"></i>
                                             <div class="flex-1 min-w-0">
-                                                <span class="font-medium text-gray-800">@item.TenSuKien</span>
-                                                <span class="text-xs text-gray-400 ml-2">@item.ThoiGian.ToString("dd/MM/yyyy")</span>
+                                                <span class="font-medium text-gray-800">@item.Ngay</span>
+                                                <span class="text-xs text-gray-400 ml-2">@item.SoNhatKy nhật ký · @item.SoCamBien cảm biến</span>
                                             </div>
-                                            <span class="text-xs font-medium flex-shrink-0 @TraceStatusColor(item.TrangThaiXacThuc)">
-                                                @TraceStatusLabel(item.TrangThaiXacThuc)
+                                            <span class="text-xs font-medium flex-shrink-0 @StatusColor(item.TrangThai)">
+                                                @StatusLabel(item.TrangThai)
                                             </span>
                                         </div>
                                     }
                                 </div>
 
-                                <!-- Technical details -->
                                 <button class="w-full flex items-center justify-between text-xs text-gray-400 hover:text-gray-600 transition-colors py-2 mt-3 border-t border-gray-100"
                                         @onclick="() => _showTechnical = !_showTechnical">
                                     <span class="flex items-center gap-1">
@@ -241,22 +225,22 @@
                                 @if (_showTechnical)
                                 {
                                     <div class="space-y-2 mt-1">
-                                        @foreach (var item in _verify.ChiTiet)
+                                        @foreach (var item in _verify.ChiTietNgay)
                                         {
                                             <div class="p-3 bg-gray-50 rounded-lg text-xs font-mono space-y-1">
-                                                <p class="text-gray-500 font-sans font-medium text-sm">@item.TenSuKien</p>
+                                                <p class="text-gray-500 font-sans font-medium text-sm">@item.Ngay</p>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-gray-400 font-sans w-16 flex-shrink-0">Hash gốc:</span>
+                                                    <span class="text-gray-400 font-sans w-20 flex-shrink-0">Hash lưu:</span>
                                                     <span class="text-gray-600 truncate">@item.StoredHash</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-gray-400 font-sans w-16 flex-shrink-0">Hash mới:</span>
+                                                    <span class="text-gray-400 font-sans w-20 flex-shrink-0">Hash tính:</span>
                                                     <span class="@(item.IsMatch ? "text-green-600" : "text-red-600") truncate">@item.ComputedHash</span>
                                                 </div>
                                                 @if (!string.IsNullOrEmpty(item.TxHash))
                                                 {
                                                     <div class="flex items-center gap-2">
-                                                        <span class="text-gray-400 font-sans w-16 flex-shrink-0">TxHash:</span>
+                                                        <span class="text-gray-400 font-sans w-20 flex-shrink-0">TxHash:</span>
                                                         <span class="text-indigo-600 truncate">@item.TxHash</span>
                                                         <button class="text-gray-400 hover:text-indigo-600 flex-shrink-0"
                                                                 @onclick='() => CopyToClipboard(item.TxHash!)' title="Sao chép">
@@ -269,8 +253,8 @@
                                     </div>
                                 }
                             }
-                        </div>
-                    }
+                        }
+                    </div>
                 }
                 else
                 {
@@ -321,62 +305,59 @@
         _timeline.Clear();
 
         _timeline.Add(new TimelineItem(
-            _data!.NgayTao,
-            "Lô sản phẩm được tạo",
-            $"Tại {_data.TenFarm}",
-            _data.DiaChiFarm,
-            "fa-seedling",
-            "bg-green-500"
-        ));
+            _data!.NgayTao, "Lô sản phẩm được tạo", $"Tại {_data.TenFarm}", _data.DiaChiFarm, "fa-seedling", "bg-green-500"));
 
         foreach (var log in _data.NhatKyCanhTac.OrderBy(l => l.NgayThucHien))
         {
             _timeline.Add(new TimelineItem(
-                log.NgayThucHien,
-                log.HoatDong,
-                log.GhiChu ?? "",
+                log.NgayThucHien, log.HoatDong, log.GhiChu ?? "",
                 !string.IsNullOrEmpty(log.TenNguoiThucHien) ? $"Thực hiện bởi: {log.TenNguoiThucHien}" : "",
-                "fa-clipboard-list",
-                "bg-blue-400"
-            ));
+                "fa-clipboard-list", "bg-blue-400"));
         }
 
         if (_data.ThuHoach != null)
         {
-            var detail = $"Sản lượng: {_data.ThuHoach.TrongLuong} kg";
-            var sub = string.IsNullOrEmpty(_data.ThuHoach.GhiChuChatLuong) ? "" : $"Chất lượng: {_data.ThuHoach.GhiChuChatLuong}";
             _timeline.Add(new TimelineItem(
-                _data.ThuHoach.NgayThuHoach,
-                "Thu hoạch",
-                detail,
-                sub,
-                "fa-leaf",
-                "bg-orange-500"
-            ));
+                _data.ThuHoach.NgayThuHoach, "Thu hoạch",
+                $"Sản lượng: {_data.ThuHoach.TrongLuong} kg",
+                string.IsNullOrEmpty(_data.ThuHoach.GhiChuChatLuong) ? "" : $"Chất lượng: {_data.ThuHoach.GhiChuChatLuong}",
+                "fa-leaf", "bg-orange-500"));
         }
 
         _timeline = [.. _timeline.OrderBy(t => t.Date)];
     }
 
-    private static string TraceStatusLabel(VerifyStatus s) => s switch
+    private static string StatusLabel(VerifyStatus s) => s switch
     {
-        VerifyStatus.HopLe                  => "Hợp lệ",
-        VerifyStatus.ChuaXacNhanBlockchain  => "Chờ xác nhận",
-        VerifyStatus.DbBiThayDoi            => "Đã bị thay đổi",
-        VerifyStatus.BlockchainKhongKhop    => "Blockchain không khớp",
-        VerifyStatus.KhongTimThayDuLieu     => "Không tìm thấy",
+        VerifyStatus.HopLe => "Hợp lệ",
+        VerifyStatus.ChuaXacNhan => "Chờ xác nhận",
+        VerifyStatus.BiThayDoi => "Đã bị thay đổi",
+        VerifyStatus.BlockchainKhongKhop => "Blockchain không khớp",
         VerifyStatus.KhongTruyCapBlockchain => "Không kết nối blockchain",
-        VerifyStatus.KhongHoTroLoaiSuKien   => "Chưa hỗ trợ",
-        _                                   => "Không xác định"
+        _ => "Không xác định"
     };
 
-    private static string TraceStatusColor(VerifyStatus s) => s switch
+    private static string StatusColor(VerifyStatus s) => s switch
     {
-        VerifyStatus.HopLe                  => "text-green-600",
-        VerifyStatus.ChuaXacNhanBlockchain  => "text-yellow-600",
+        VerifyStatus.HopLe => "text-green-600",
+        VerifyStatus.ChuaXacNhan => "text-yellow-600",
         VerifyStatus.KhongTruyCapBlockchain => "text-orange-500",
-        VerifyStatus.KhongHoTroLoaiSuKien   => "text-gray-400",
-        _                                   => "text-red-600"
+        _ => "text-red-600"
+    };
+
+    private static string StatusBg(VerifyStatus s) => s switch
+    {
+        VerifyStatus.HopLe => "bg-green-50",
+        VerifyStatus.ChuaXacNhan => "bg-yellow-50",
+        _ => "bg-red-50"
+    };
+
+    private static string StatusIcon(VerifyStatus s) => s switch
+    {
+        VerifyStatus.HopLe => "fa-check-circle text-green-500",
+        VerifyStatus.ChuaXacNhan => "fa-clock text-yellow-500",
+        VerifyStatus.KhongTruyCapBlockchain => "fa-plug-circle-exclamation text-orange-400",
+        _ => "fa-times-circle text-red-500"
     };
 
     private async Task CopyToClipboard(string text)

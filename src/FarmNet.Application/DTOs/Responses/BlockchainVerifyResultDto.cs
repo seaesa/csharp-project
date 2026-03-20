@@ -1,36 +1,36 @@
-using FarmNet.Domain.Enums;
-
 namespace FarmNet.Application.DTOs.Responses;
 
-public enum VerifyStatus
-{
-    HopLe = 0,
-    ChuaXacNhanBlockchain = 1,
-    DbBiThayDoi = 2,
-    BlockchainKhongKhop = 3,
-    KhongTimThayDuLieu = 4,
-    KhongTruyCapBlockchain = 5,
-    KhongHoTroLoaiSuKien = 6,
-}
+public enum VerifyStatus { HopLe, ChuaXacNhan, BiThayDoi, BlockchainKhongKhop, KhongTruyCapBlockchain }
 
-public record BlockchainVerifyItemDto(
-    Guid RecordId,
-    BlockchainEventType LoaiSuKien,
-    string TenSuKien,
+public record DailyVerifyItemDto(
+    DateOnly Ngay,
     string StoredHash,
     string ComputedHash,
     bool IsMatch,
-    bool DaXacNhan,
+    int SoNhatKy,
+    int SoCamBien,
     string? TxHash,
-    VerifyStatus TrangThaiXacThuc,
-    DateTime ThoiGian
+    VerifyStatus TrangThai
 );
 
 public record BlockchainVerifyResultDto(
     bool ToanVen,
-    int TongSoBanGhi,
-    int SoBanGhiHopLe,
-    int SoBanGhiBiThayDoi,
-    int SoBanGhiChuaXacNhan,
-    List<BlockchainVerifyItemDto> ChiTiet
+    int TongSoNgay,
+    int SoNgayKiemTra,
+    int SoNgayHopLe,
+    int SoNgayBiThayDoi,
+    VerifyStatus TaoLoStatus,
+    VerifyStatus? ThuHoachStatus,
+    List<DailyVerifyItemDto> ChiTietNgay
+);
+
+public record DailyHashDto(
+    Guid Id,
+    DateOnly Ngay,
+    string DataHash,
+    string? TxHash,
+    bool DaXacNhan,
+    int SoNhatKy,
+    int SoCamBien,
+    DateTime NgayTao
 );

@@ -4,6 +4,7 @@ using FarmNet.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FarmNet.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260320032102_AddDailyHash")]
+    partial class AddDailyHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,9 +184,6 @@ namespace FarmNet.Infrastructure.Data.Migrations
                     b.Property<Guid>("BatchId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("DaXacNhan")
-                        .HasColumnType("bit");
-
                     b.Property<string>("DataHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -199,9 +199,6 @@ namespace FarmNet.Infrastructure.Data.Migrations
 
                     b.Property<int>("SoNhatKy")
                         .HasColumnType("int");
-
-                    b.Property<string>("TxHash")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -349,9 +346,6 @@ namespace FarmNet.Infrastructure.Data.Migrations
 
                     b.Property<double>("DoPH")
                         .HasColumnType("float");
-
-                    b.Property<byte[]>("HinhAnh")
-                        .HasColumnType("varbinary(max)");
 
                     b.Property<double>("NhietDo")
                         .HasColumnType("float");

@@ -51,6 +51,7 @@ public class MappingProfile : Profile
         BlockchainEventType.NhatKyCanhTac => "Nhật ký canh tác",
         BlockchainEventType.TongHopCamBien => "Tổng hợp cảm biến",
         BlockchainEventType.ThuHoach => "Thu hoạch",
+        BlockchainEventType.TongHopHangNgay => "Tổng hợp hàng ngày",
         _ => "Không xác định"
     };
 }

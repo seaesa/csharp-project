@@ -9,7 +9,7 @@ namespace FarmNet.Api.Controllers;
 [ApiController]
 [Route("api/batches")]
 [Authorize]
-public class BatchesController(IBatchService batchService) : ControllerBase
+public class BatchesController(IBatchService batchService, IDailyHashService dailyHashService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] Guid? farmId) =>
@@ -58,5 +58,17 @@ public class BatchesController(IBatchService batchService) : ControllerBase
     {
         var result = await batchService.VerifyBlockchainAsync(id);
         return result == null ? NotFound(new { message = "Không tìm thấy lô sản phẩm" }) : Ok(result);
+    }
+
+    [HttpGet("{id:guid}/daily-hashes")]
+    public async Task<IActionResult> GetDailyHashes(Guid id) =>
+        Ok(await dailyHashService.GetByBatchAsync(id));
+
+    [HttpPost("{id:guid}/commit-blockchain")]
+    [Authorize(Roles = "Admin,FarmOwner")]
+    public async Task<IActionResult> CommitBlockchain(Guid id)
+    {
+        await dailyHashService.CommitToBlockchainAsync(id);
+        return Ok(new { message = "Đã commit merkle root lên blockchain" });
     }
 }
