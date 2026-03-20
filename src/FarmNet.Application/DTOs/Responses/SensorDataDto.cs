@@ -8,8 +8,9 @@ public record SensorDataDto(
     double DoPH,
     double AnhSang,
     double DoAmDat,
-    DateTime ThoiGian
+    DateTime ThoiGian,
+    string? HinhAnhBase64
 )
 {
-    public SensorDataDto() : this(default, string.Empty, default, default, default, default, default, default) { }
+    public SensorDataDto() : this(default, string.Empty, default, default, default, default, default, default, null) { }
 }

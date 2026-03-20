@@ -1,3 +1,4 @@
+using FarmNet.Api.Models;
 using FarmNet.Application.DTOs.Requests;
 using FarmNet.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -42,8 +43,27 @@ public class SensorsController(ISensorService sensorService) : ControllerBase
 
     [HttpPost("data")]
     [AllowAnonymous]
-    public async Task<IActionResult> RecordData([FromBody] SensorDataRequest request)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> RecordData([FromForm] SensorDataFormRequest form)
     {
+        byte[]? imageBytes = null;
+        if (form.Image is { Length: > 0 })
+        {
+            using var ms = new MemoryStream();
+            await form.Image.CopyToAsync(ms);
+            imageBytes = ms.ToArray();
+        }
+
+        var request = new SensorDataRequest(
+            form.BatchId,
+            form.Temperature,
+            form.Humidity,
+            form.SoilPH,
+            form.LightLevel,
+            form.SoilMoisture,
+            imageBytes
+        );
+
         var result = await sensorService.RecordDataAsync(request);
         if (result.IsFailed) return BadRequest(new { message = result.Errors.First().Message });
         return Ok(new { message = "Ghi dữ liệu cảm biến thành công" });

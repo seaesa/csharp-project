@@ -6,5 +6,6 @@ public record SensorDataRequest(
     double Humidity,
     double SoilPH,
     double LightLevel,
-    double SoilMoisture
+    double SoilMoisture,
+    byte[]? HinhAnh = null
 );

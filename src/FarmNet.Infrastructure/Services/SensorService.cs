@@ -73,6 +73,7 @@ public class SensorService(
             DoPH = request.SoilPH,
             AnhSang = request.LightLevel,
             DoAmDat = request.SoilMoisture,
+            HinhAnh = request.HinhAnh,
             SensorId = sensor?.Id
         };
 

@@ -10,6 +10,7 @@ public class SensorData
     public double AnhSang { get; set; }
     public double DoAmDat { get; set; }
     public DateTime ThoiGian { get; set; } = DateTime.UtcNow;
+    public byte[]? HinhAnh { get; set; }
 
     public Guid? SensorId { get; set; }
     public Sensor? Sensor { get; set; }

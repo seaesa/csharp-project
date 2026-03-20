@@ -24,7 +24,8 @@ public class MappingProfile : Profile
             .ForMember(d => d.DoAm, o => o.MapFrom(s => s.DoAm))
             .ForMember(d => d.DoPH, o => o.MapFrom(s => s.DoPH))
             .ForMember(d => d.AnhSang, o => o.MapFrom(s => s.AnhSang))
-            .ForMember(d => d.DoAmDat, o => o.MapFrom(s => s.DoAmDat));
+            .ForMember(d => d.DoAmDat, o => o.MapFrom(s => s.DoAmDat))
+            .ForMember(d => d.HinhAnhBase64, o => o.MapFrom(s => s.HinhAnh != null ? Convert.ToBase64String(s.HinhAnh) : null));
 
         CreateMap<FarmingLog, FarmingLogDto>()
             .ForMember(d => d.TenNguoiThucHien, o => o.MapFrom(s => s.NguoiThucHien.HoTen));
