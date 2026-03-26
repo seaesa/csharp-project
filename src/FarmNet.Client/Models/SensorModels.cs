@@ -17,9 +17,10 @@ public class SensorDataDto
     public string BatchId { get; set; } = string.Empty;
     public double NhietDo { get; set; }
     public double DoAm { get; set; }
-    public double DoPH { get; set; }
-    public double AnhSang { get; set; }
     public double DoAmDat { get; set; }
+    public bool CoMua { get; set; }
+    public double KhiGas { get; set; }
+    public bool BomBat { get; set; }
     public DateTime ThoiGian { get; set; }
 }
 

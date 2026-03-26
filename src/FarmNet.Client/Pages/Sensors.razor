@@ -83,9 +83,10 @@
                                 <TableHeaderCell>Mã lô</TableHeaderCell>
                                 <TableHeaderCell>Nhiệt độ</TableHeaderCell>
                                 <TableHeaderCell>Độ ẩm KK</TableHeaderCell>
-                                <TableHeaderCell>pH đất</TableHeaderCell>
-                                <TableHeaderCell>Ánh sáng</TableHeaderCell>
+                                <TableHeaderCell>Mưa</TableHeaderCell>
                                 <TableHeaderCell>Độ ẩm đất</TableHeaderCell>
+                                <TableHeaderCell>Khí (MQ7)</TableHeaderCell>
+                                <TableHeaderCell>Bơm</TableHeaderCell>
                                 <TableHeaderCell>Thời gian</TableHeaderCell>
                             </TableRow>
                         </TableHeader>
@@ -96,9 +97,10 @@
                                     <TableRowCell class="font-mono text-green-700">@d.BatchId</TableRowCell>
                                     <TableRowCell>@d.NhietDo.ToString("F1")°C</TableRowCell>
                                     <TableRowCell>@d.DoAm.ToString("F1")%</TableRowCell>
-                                    <TableRowCell>@d.DoPH.ToString("F1")</TableRowCell>
-                                    <TableRowCell>@d.AnhSang.ToString("F0") lux</TableRowCell>
-                                    <TableRowCell>@d.DoAmDat.ToString("F1")%</TableRowCell>
+                                    <TableRowCell>@(d.CoMua ? "Mưa" : "Không mưa")</TableRowCell>
+                                    <TableRowCell>@d.DoAmDat.ToString("F0")</TableRowCell>
+                                    <TableRowCell>@d.KhiGas.ToString("F0")</TableRowCell>
+                                    <TableRowCell>@(d.BomBat ? "Bật" : "Tắt")</TableRowCell>
                                     <TableRowCell TextColor="TextColor.Muted">@d.ThoiGian.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</TableRowCell>
                                 </TableRow>
                             }

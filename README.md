@@ -87,12 +87,15 @@ POST http://localhost:5045/api/sensors/data
 Content-Type: application/json
 
 {
-  "BatchId": "HEHE-001",
-  "Temperature": 25.3,
-  "Humidity": 60.5,
-  "SoilPH": 6.8,
-  "LightLevel": 800,
-  "SoilMoisture": 40.2
+  "device": "ESP32_FARM_001",
+  "batchID": "XOAI001",
+  "time": "2026-03-25 14:30:05",
+  "temp": 30.5,
+  "hum": 65.2,
+  "rain": 1,
+  "water": 1800,
+  "gas": 120,
+  "pump": 0
 }
 
 ```

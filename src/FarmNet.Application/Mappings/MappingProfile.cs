@@ -22,9 +22,10 @@ public class MappingProfile : Profile
         CreateMap<SensorData, SensorDataDto>()
             .ForMember(d => d.NhietDo, o => o.MapFrom(s => s.NhietDo))
             .ForMember(d => d.DoAm, o => o.MapFrom(s => s.DoAm))
-            .ForMember(d => d.DoPH, o => o.MapFrom(s => s.DoPH))
-            .ForMember(d => d.AnhSang, o => o.MapFrom(s => s.AnhSang))
             .ForMember(d => d.DoAmDat, o => o.MapFrom(s => s.DoAmDat))
+            .ForMember(d => d.CoMua, o => o.MapFrom(s => s.CoMua))
+            .ForMember(d => d.KhiGas, o => o.MapFrom(s => s.KhiGas))
+            .ForMember(d => d.BomBat, o => o.MapFrom(s => s.BomBat))
             .ForMember(d => d.HinhAnhBase64, o => o.MapFrom(s => s.HinhAnh != null ? Convert.ToBase64String(s.HinhAnh) : null));
 
         CreateMap<FarmingLog, FarmingLogDto>()

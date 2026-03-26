@@ -68,9 +68,10 @@ else
                         <div class="grid grid-cols-2 gap-4">
                             <SensorMetric Label="Nhiệt độ" Value="@($"{latest.NhietDo:F1}°C")" Icon="fa-thermometer-half" Color="text-red-500" />
                             <SensorMetric Label="Độ ẩm không khí" Value="@($"{latest.DoAm:F1}%")" Icon="fa-tint" Color="text-blue-500" />
-                            <SensorMetric Label="Độ pH đất" Value="@($"{latest.DoPH:F1}")" Icon="fa-flask" Color="text-purple-500" />
-                            <SensorMetric Label="Ánh sáng" Value="@($"{latest.AnhSang:F0} lux")" Icon="fa-sun" Color="text-yellow-500" />
-                            <SensorMetric Label="Độ ẩm đất" Value="@($"{latest.DoAmDat:F1}%")" Icon="fa-water" Color="text-teal-500" />
+                                <SensorMetric Label="Mưa" Value="@(latest.CoMua ? "Mưa" : "Không mưa")" Icon="fa-cloud-showers-heavy" Color="text-indigo-500" />
+                                <SensorMetric Label="Khí (MQ7)" Value="@($"{latest.KhiGas:F0}")" Icon="fa-wind" Color="text-emerald-600" />
+                                <SensorMetric Label="Độ ẩm đất (analog)" Value="@($"{latest.DoAmDat:F0}")" Icon="fa-droplet" Color="text-teal-500" />
+                                <SensorMetric Label="Bơm" Value="@(latest.BomBat ? "Bật" : "Tắt")" Icon="fa-pump-med" Color="text-orange-500" />
                             <div class="text-xs text-gray-400 flex items-end">
                                 <i class="fas fa-clock mr-1"></i>@latest.ThoiGian.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                             </div>

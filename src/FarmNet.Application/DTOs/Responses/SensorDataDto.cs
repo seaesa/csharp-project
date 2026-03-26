@@ -5,12 +5,13 @@ public record SensorDataDto(
     string BatchId,
     double NhietDo,
     double DoAm,
-    double DoPH,
-    double AnhSang,
     double DoAmDat,
+    bool CoMua,
+    double KhiGas,
+    bool BomBat,
     DateTime ThoiGian,
     string? HinhAnhBase64
 )
 {
-    public SensorDataDto() : this(default, string.Empty, default, default, default, default, default, default, null) { }
+    public SensorDataDto() : this(default, string.Empty, default, default, default, false, default, false, default, null) { }
 }

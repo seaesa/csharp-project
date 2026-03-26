@@ -14,7 +14,8 @@ public class SensorService(
     IRepository<SensorData> dataRepo,
     IRepository<Batch> batchRepo,
     IUnitOfWork uow,
-    IMapper mapper) : ISensorService
+    IMapper mapper,
+    IDailyHashService dailyHashService) : ISensorService
 {
     public async Task<IEnumerable<SensorDto>> GetAllAsync(Guid? batchId = null)
     {
@@ -62,7 +63,15 @@ public class SensorService(
         var batch = await batchRepo.Query().FirstOrDefaultAsync(b => b.MaLo == request.BatchId);
         if (batch == null) return Result.Fail($"Không tìm thấy lô sản phẩm '{request.BatchId}'");
 
-        var sensor = await repo.Query().FirstOrDefaultAsync(s => s.BatchId == batch.Id && s.HoatDong);
+        Sensor? sensor = null;
+        if (!string.IsNullOrWhiteSpace(request.DeviceId))
+        {
+            sensor = await repo.Query()
+                .FirstOrDefaultAsync(s =>
+                    s.Ten == request.DeviceId &&
+                    s.BatchId == batch.Id &&
+                    s.HoatDong);
+        }
 
         var data = new SensorData
         {
@@ -70,15 +79,26 @@ public class SensorService(
             BatchId = request.BatchId,
             NhietDo = request.Temperature,
             DoAm = request.Humidity,
-            DoPH = request.SoilPH,
-            AnhSang = request.LightLevel,
+            // Các cột pH/ánh sáng không nằm trong IoT spec hiện tại.
+            DoPH = 0,
+            AnhSang = 0,
             DoAmDat = request.SoilMoisture,
+            CoMua = request.CoMua,
+            KhiGas = request.Gas,
+            BomBat = request.PumpOn,
+            ThoiGian = request.ThoiGian,
             HinhAnh = request.HinhAnh,
             SensorId = sensor?.Id
         };
 
         await dataRepo.AddAsync(data);
         await uow.SaveChangesAsync();
+
+        // Đồng bộ daily hash với dữ liệu cảm biến mới.
+        // Nếu day đã từng commit blockchain trước đó, TxHash sẽ được giữ lại để verify phát hiện sai lệch.
+        var ngayUtc = DateTime.SpecifyKind(data.ThoiGian, DateTimeKind.Utc);
+        await dailyHashService.RecalcAsync(batch.Id, DateOnly.FromDateTime(ngayUtc));
+
         return Result.Ok();
     }
 

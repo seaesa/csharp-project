@@ -3,6 +3,7 @@ using FarmNet.Application.DTOs.Requests;
 using FarmNet.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace FarmNet.Api.Controllers;
 
@@ -43,25 +44,34 @@ public class SensorsController(ISensorService sensorService) : ControllerBase
 
     [HttpPost("data")]
     [AllowAnonymous]
-    [Consumes("multipart/form-data")]
-    public async Task<IActionResult> RecordData([FromForm] SensorDataFormRequest form)
+    [Consumes("application/json")]
+    public async Task<IActionResult> RecordData([FromBody] SensorDataIotRequest iot)
     {
-        byte[]? imageBytes = null;
-        if (form.Image is { Length: > 0 })
+        DateTime timeUtc;
+        try
         {
-            using var ms = new MemoryStream();
-            await form.Image.CopyToAsync(ms);
-            imageBytes = ms.ToArray();
+            var dt = DateTime.ParseExact(iot.Time, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            timeUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        }
+        catch
+        {
+            return BadRequest(new { message = "time không đúng định dạng 'yyyy-MM-dd HH:mm:ss' (UTC)" });
         }
 
+        // IoT spec: rain = 1 => không mưa, rain = 0 => mưa
+        var coMua = iot.Rain == 0;
+        var bomBat = iot.Pump != 0;
+
         var request = new SensorDataRequest(
-            form.BatchId,
-            form.Temperature,
-            form.Humidity,
-            form.SoilPH,
-            form.LightLevel,
-            form.SoilMoisture,
-            imageBytes
+            iot.DeviceId,
+            iot.BatchId,
+            timeUtc,
+            iot.Temp,
+            iot.Hum,
+            coMua,
+            iot.Water,
+            iot.Gas,
+            bomBat
         );
 
         var result = await sensorService.RecordDataAsync(request);
