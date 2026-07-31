@@ -19,7 +19,10 @@ public class FarmingLogsController(IFarmingLogService logService) : ControllerBa
     [Authorize(Roles = "Admin,FarmOwner,Worker")]
     public async Task<IActionResult> Create([FromBody] TaoNhatKyRequest request)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Unauthorized(new { message = "Không xác định được người dùng từ token." });
+
         var result = await logService.CreateAsync(request, userId);
         if (result.IsFailed) return BadRequest(new { message = result.Errors.First().Message });
         return Created($"/api/farming-logs/{request.BatchId}", result.Value);

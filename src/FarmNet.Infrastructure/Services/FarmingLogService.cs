@@ -5,6 +5,7 @@ using FarmNet.Application.DTOs.Responses;
 using FarmNet.Application.Services;
 using FarmNet.Domain.Entities;
 using FarmNet.Domain.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace FarmNet.Infrastructure.Services;
@@ -13,7 +14,8 @@ public class FarmingLogService(
     IRepository<FarmingLog> repo,
     IUnitOfWork uow,
     IMapper mapper,
-    IDailyHashService dailyHashService) : IFarmingLogService
+    IDailyHashService dailyHashService,
+    UserManager<AppUser> userManager) : IFarmingLogService
 {
     public async Task<IEnumerable<FarmingLogDto>> GetByBatchAsync(Guid batchId)
     {
@@ -27,6 +29,10 @@ public class FarmingLogService(
 
     public async Task<Result<FarmingLogDto>> CreateAsync(TaoNhatKyRequest request, string userId)
     {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            return Result.Fail("Người dùng không tồn tại hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+
         var log = new FarmingLog
         {
             Id = Guid.NewGuid(),
